@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>NGO Dashboard | SevaConnect</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<!-- ======================================================
+     NAVBAR
+====================================================== -->
+
+<nav class="navbar">
+
+    <div class="logo">
+
+        <span class="logo-icon">
+            🤝
+        </span>
+
+        <span>
+            SevaConnect
+        </span>
+
+    </div>
+
+
+    <div class="nav-links">
+
+        <a href="{{ url_for('ngo_dashboard') }}"
+           class="active">
+            Dashboard
+        </a>
+
+        <a href="{{ url_for('ngo_profile') }}">
+            NGO Profile
+        </a>
+
+        <a href="{{ url_for('create_opportunity') }}">
+            Create Opportunity
+        </a>
+
+        <a href="{{ url_for('logout') }}">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+
+<!-- ======================================================
+     MAIN
+====================================================== -->
+
+<main class="dashboard-container">
+
+
+    <!-- ==================================================
+         HEADER
+    ================================================== -->
+
+    <section class="dashboard-header">
+
+        <div>
+
+            <h1>
+                Welcome,
+                {{ ngo["name"] }} 🏢
+            </h1>
+
+            <p>
+                Manage your volunteer opportunities and
+                applications from one place.
+            </p>
+
+        </div>
+
+
+        <a href="{{ url_for('create_opportunity') }}"
+           class="primary-button">
+
+            + Create Opportunity
+
+        </a>
+
+    </section>
+
+
+
+    <!-- ==================================================
+         STATS
+    ================================================== -->
+
+    <section class="stats-grid">
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                📢
+            </div>
+
+            <div class="stat-number">
+                {{ opportunities|length }}
+            </div>
+
+            <div class="stat-label">
+                Opportunities
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                📋
+            </div>
+
+            <div class="stat-number">
+                {{ total_applications }}
+            </div>
+
+            <div class="stat-label">
+                Applications
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                ⏳
+            </div>
+
+            <div class="stat-number">
+                {{ pending_applications }}
+            </div>
+
+            <div class="stat-label">
+                Pending
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                ✅
+            </div>
+
+            <div class="stat-number">
+                {{ accepted_applications }}
+            </div>
+
+            <div class="stat-label">
+                Accepted
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==================================================
+         QUICK ACTIONS
+    ================================================== -->
+
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <h2>
+                    Quick Actions
+                </h2>
+
+                <p>
+                    Manage your NGO activities.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="quick-actions">
+
+
+            <a href="{{ url_for('create_opportunity') }}"
+               class="quick-action-card">
+
+                <div class="quick-action-icon">
+                    ➕
+                </div>
+
+                <h3>
+                    Create Opportunity
+                </h3>
+
+                <p>
+                    Post a new volunteering opportunity.
+                </p>
+
+            </a>
+
+
+            <a href="{{ url_for('ngo_profile') }}"
+               class="quick-action-card">
+
+                <div class="quick-action-icon">
+                    🏢
+                </div>
+
+                <h3>
+                    NGO Profile
+                </h3>
+
+                <p>
+                    Update your organization's information.
+                </p>
+
+            </a>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==================================================
+         MY OPPORTUNITIES
+    ================================================== -->
+
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <h2>
+                    My Opportunities
+                </h2>
+
+                <p>
+                    Opportunities created by your organization.
+                </p>
+
+            </div>
+
+
+            <a href="{{ url_for('create_opportunity') }}"
+               class="secondary-button">
+
+                + Add Opportunity
+
+            </a>
+
+        </div>
+
+
+        {% if opportunities %}
+
+        <div class="opportunity-grid">
+
+
+            {% for opportunity in opportunities %}
+
+            <div class="opportunity-card">
+
+
+                <div class="opportunity-top">
+
+                    <span class="cause-badge">
+                        {{ opportunity["cause"] }}
+                    </span>
+
+                    <span class="score-badge">
+                        {{ opportunity["mode"] }}
+                    </span>
+
+                </div>
+
+
+                <h3>
+                    {{ opportunity["title"] }}
+                </h3>
+
+
+                <p>
+                    {{ opportunity["description"] }}
+                </p>
+
+
+                <div class="opportunity-details">
+
+                    <span>
+                        📍
+                        {{ opportunity["location"] }}
+                    </span>
+
+                    <span>
+                        📅
+                        {{ opportunity["availability"] }}
+                    </span>
+
+                    <span>
+                        ⏰
+                        {{ opportunity["hours_required"] }}
+                        hrs
+                    </span>
+
+                </div>
+
+
+                <div class="opportunity-actions">
+
+                    <form
+                        action="{{ url_for(
+                            'delete_opportunity',
+                            opportunity_id=opportunity['opportunity_id']
+                        ) }}"
+                        method="POST"
+                    >
+
+                        <button
+                            type="submit"
+                            class="danger-button"
+                            onclick="return confirm(
+                                'Delete this opportunity?'
+                            );"
+                        >
+                            Delete
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+
+        </div>
+
+
+        {% else %}
+
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                📢
+            </div>
+
+            <h3>
+                No opportunities yet
+            </h3>
+
+            <p>
+                Create your first volunteer opportunity
+                to start receiving applications.
+            </p>
+
+            <a href="{{ url_for('create_opportunity') }}"
+               class="primary-button">
+
+                Create Opportunity
+
+            </a>
+
+        </div>
+
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- ==================================================
+         APPLICANTS
+    ================================================== -->
+
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <h2>
+                    Volunteer Applications
+                </h2>
+
+                <p>
+                    Review volunteers who applied to your opportunities.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if applicants %}
+
+
+        <div class="applications-list">
+
+
+            {% for applicant in applicants %}
+
+
+            <div class="ngo-application-card">
+
+
+                <!-- Volunteer information -->
+
+                <div class="ngo-applicant-info">
+
+
+                    <div class="applicant-avatar">
+                        👤
+                    </div>
+
+
+                    <div>
+
+                        <h3>
+                            {{ applicant["volunteer_name"] }}
+                        </h3>
+
+                        <p>
+                            {{ applicant["volunteer_email"] }}
+                        </p>
+
+                        <p>
+                            Applied for:
+                            <strong>
+                                {{ applicant["opportunity_title"] }}
+                            </strong>
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Volunteer details -->
+
+                <div class="volunteer-details">
+
+
+                    <div>
+                        <strong>
+                            Skills
+                        </strong>
+
+                        <span>
+                            {{ applicant["skills"] or "Not provided" }}
+                        </span>
+                    </div>
+
+
+                    <div>
+                        <strong>
+                            Interests
+                        </strong>
+
+                        <span>
+                            {{ applicant["interests"] or "Not provided" }}
+                        </span>
+                    </div>
+
+
+                    <div>
+                        <strong>
+                            Location
+                        </strong>
+
+                        <span>
+                            {{ applicant["location"] or "Not provided" }}
+                        </span>
+                    </div>
+
+
+                    <div>
+                        <strong>
+                            Experience
+                        </strong>
+
+                        <span>
+                            {{ applicant["experience"] or "Not provided" }}
+                        </span>
+                    </div>
+
+
+                    <div>
+                        <strong>
+                            Mode
+                        </strong>
+
+                        <span>
+                            {{ applicant["preferred_mode"] or "Not provided" }}
+                        </span>
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- Status -->
+
+                <div class="application-status-section">
+
+
+                    {% if applicant["status"] == "Accepted" %}
+
+                    <span class="status-badge accepted">
+                        ✓ Accepted
+                    </span>
+
+
+                    {% elif applicant["status"] == "Rejected" %}
+
+                    <span class="status-badge rejected">
+                        ✕ Rejected
+                    </span>
+
+
+                    {% elif applicant["status"] == "Completed" %}
+
+                    <span class="status-badge completed">
+                        ✓ Completed
+                    </span>
+
+
+                    {% else %}
+
+                    <span class="status-badge pending">
+                        ⏳ Pending
+                    </span>
+
+                    {% endif %}
+
+
+                    <div class="application-buttons">
+
+
+                        {% if applicant["status"] != "Accepted" %}
+
+                        <form
+                            action="{{ url_for(
+                                'update_application_status',
+                                application_id=applicant['application_id'],
+                                new_status='Accepted'
+                            ) }}"
+                            method="POST"
+                        >
+
+                            <button
+                                type="submit"
+                                class="accept-button"
+                            >
+                                ✓ Accept
+                            </button>
+
+                        </form>
+
+                        {% endif %}
+
+
+
+                        {% if applicant["status"] != "Rejected" %}
+
+                        <form
+                            action="{{ url_for(
+                                'update_application_status',
+                                application_id=applicant['application_id'],
+                                new_status='Rejected'
+                            ) }}"
+                            method="POST"
+                        >
+
+                            <button
+                                type="submit"
+                                class="reject-button"
+                            >
+                                ✕ Reject
+                            </button>
+
+                        </form>
+
+                        {% endif %}
+
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+        {% else %}
+
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                👥
+            </div>
+
+            <h3>
+                No applications yet
+            </h3>
+
+            <p>
+                Volunteer applications will appear here
+                when people apply to your opportunities.
+            </p>
+
+        </div>
+
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- ==================================================
+         NGO PROFILE SUMMARY
+    ================================================== -->
+
+    <section class="profile-summary">
+
+
+        <div>
+
+            <h2>
+                {{ ngo["name"] }}
+            </h2>
+
+            <p>
+                {{ ngo["description"] or
+                   "Complete your NGO profile to help volunteers understand your organization." }}
+            </p>
+
+            <span class="profile-completion">
+
+                Cause:
+                {{ ngo["cause"] or "Not specified" }}
+
+                &nbsp; • &nbsp;
+
+                Location:
+                {{ ngo["location"] or "Not specified" }}
+
+            </span>
+
+        </div>
+
+
+        <a href="{{ url_for('ngo_profile') }}"
+           class="primary-button">
+
+            Edit NGO Profile
+
+        </a>
+
+
+    </section>
+
+
+</main>
+
+
+
+<!-- ======================================================
+     FOOTER
+====================================================== -->
+
+<footer class="footer">
+
+    <div class="footer-content">
+
+        <div>
+
+            <h3>
+                🤝 SevaConnect
+            </h3>
+
+            <p>
+                Connecting volunteers with meaningful opportunities.
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <p>
+                © 2026 SevaConnect
+            </p>
+
+            <p>
+                Community • Service • Impact
+            </p>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+
+</html>

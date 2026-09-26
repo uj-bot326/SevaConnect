@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Volunteer Profile | SevaConnect
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+
+    <!-- ================= NAVBAR ================= -->
+
+    <nav class="navbar">
+
+        <div class="logo">
+            SevaConnect
+        </div>
+
+        <div class="nav-links">
+
+            <a href="/volunteer-dashboard">
+                Dashboard
+            </a>
+
+            <span class="welcome-user">
+                Hi, {{ session["name"] }} 👋
+            </span>
+
+            <a
+                href="/logout"
+                class="login-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ================= PROFILE PAGE ================= -->
+
+    <main class="profile-page">
+
+
+        <section class="profile-header">
+
+            <h1>
+                Complete Your Volunteer Profile
+            </h1>
+
+            <p>
+                Tell us about your skills, interests and
+                availability so SevaConnect can find
+                suitable opportunities for you.
+            </p>
+
+        </section>
+
+
+        <!-- ================= FORM ================= -->
+
+        <section class="profile-form-card">
+
+            <form
+                action="/volunteer-profile"
+                method="POST"
+            >
+
+
+                <!-- PERSONAL INFORMATION -->
+
+                <div class="form-section">
+
+                    <h2>
+                        👤 Personal Information
+                    </h2>
+
+                    <div class="form-group">
+
+                        <label for="name">
+                            Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value="{{ session['name'] }}"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- SKILLS -->
+
+                <div class="form-section">
+
+                    <h2>
+                        🛠 Skills
+                    </h2>
+
+                    <p class="form-help">
+                        Enter your skills separated by commas.
+                    </p>
+
+                    <div class="form-group">
+
+                        <label for="skills">
+                            Your Skills
+                        </label>
+
+                        <input
+                            type="text"
+                            id="skills"
+                            name="skills"
+                            value="{{ profile['skills'] if profile else '' }}"
+                            placeholder="Python, Teaching, Communication"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- INTERESTS -->
+
+                <div class="form-section">
+
+                    <h2>
+                        ❤️ Interests
+                    </h2>
+
+                    <p class="form-help">
+                        Enter social causes or areas
+                        you are interested in.
+                    </p>
+
+                    <div class="form-group">
+
+                        <label for="interests">
+                            Your Interests
+                        </label>
+
+                        <input
+                            type="text"
+                            id="interests"
+                            name="interests"
+                            value="{{ profile['interests'] if profile else '' }}"
+                            placeholder="Education, Environment, Healthcare"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- LOCATION -->
+
+                <div class="form-section">
+
+                    <h2>
+                        📍 Location
+                    </h2>
+
+                    <div class="form-group">
+
+                        <label for="location">
+                            City / Location
+                        </label>
+
+                        <input
+                            type="text"
+                            id="location"
+                            name="location"
+                            value="{{ profile['location'] if profile else '' }}"
+                            placeholder="Jaipur"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- AVAILABILITY -->
+
+                <div class="form-section">
+
+                    <h2>
+                        🕒 Availability
+                    </h2>
+
+                    <p class="form-help">
+                        Enter available days separated by commas.
+                    </p>
+
+                    <div class="form-group">
+
+                        <label for="availability">
+                            Available Days
+                        </label>
+
+                        <input
+                            type="text"
+                            id="availability"
+                            name="availability"
+                            value="{{ profile['availability'] if profile else '' }}"
+                            placeholder="Saturday, Sunday"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- EXPERIENCE -->
+
+                <div class="form-section">
+
+                    <h2>
+                        📚 Experience
+                    </h2>
+
+                    <div class="form-group">
+
+                        <label for="experience">
+                            Experience Level
+                        </label>
+
+                        <select
+                            id="experience"
+                            name="experience"
+                            required
+                        >
+
+                            <option value="">
+                                Select experience level
+                            </option>
+
+                            <option
+                                value="beginner"
+                                {% if profile and profile['experience'] == 'beginner' %}
+                                selected
+                                {% endif %}
+                            >
+                                Beginner
+                            </option>
+
+                            <option
+                                value="intermediate"
+                                {% if profile and profile['experience'] == 'intermediate' %}
+                                selected
+                                {% endif %}
+                            >
+                                Intermediate
+                            </option>
+
+                            <option
+                                value="advanced"
+                                {% if profile and profile['experience'] == 'advanced' %}
+                                selected
+                                {% endif %}
+                            >
+                                Advanced
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PREFERRED MODE -->
+
+                <div class="form-section">
+
+                    <h2>
+                        💻 Preferred Volunteering Mode
+                    </h2>
+
+                    <div class="form-group">
+
+                        <label for="preferred_mode">
+                            Preferred Mode
+                        </label>
+
+                        <select
+                            id="preferred_mode"
+                            name="preferred_mode"
+                            required
+                        >
+
+                            <option value="">
+                                Select preferred mode
+                            </option>
+
+                            <option
+                                value="online"
+                                {% if profile and profile['preferred_mode'] == 'online' %}
+                                selected
+                                {% endif %}
+                            >
+                                Online
+                            </option>
+
+                            <option
+                                value="offline"
+                                {% if profile and profile['preferred_mode'] == 'offline' %}
+                                selected
+                                {% endif %}
+                            >
+                                Offline
+                            </option>
+
+                            <option
+                                value="hybrid"
+                                {% if profile and profile['preferred_mode'] == 'hybrid' %}
+                                selected
+                                {% endif %}
+                            >
+                                Hybrid
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- HOURS -->
+
+                <div class="form-section">
+
+                    <h2>
+                        ⏱ Weekly Availability
+                    </h2>
+
+                    <div class="form-group">
+
+                        <label for="hours_per_week">
+                            Hours Available Per Week
+                        </label>
+
+                        <input
+                            type="number"
+                            id="hours_per_week"
+                            name="hours_per_week"
+                            min="1"
+                            max="168"
+                            value="{{ profile['hours_per_week'] if profile else '' }}"
+                            placeholder="5"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <!-- BUTTONS -->
+
+                <div class="form-actions">
+
+                    <a
+                        href="/volunteer-dashboard"
+                        class="secondary-button"
+                    >
+                        Cancel
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Save Profile
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </section>
+
+    </main>
+
+
+    <!-- ================= FOOTER ================= -->
+
+    <footer class="footer">
+
+        <div class="footer-content">
+
+            <div>
+
+                <h3>
+                    SevaConnect
+                </h3>
+
+                <p>
+                    Connecting people with purpose through
+                    intelligent volunteer matching.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            <p>
+                © 2026 SevaConnect. All rights reserved.
+            </p>
+
+        </div>
+
+    </footer>
+
+
+</body>
+
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>SevaConnect | Volunteer Management Platform</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+
+        <div class="logo">
+            Seva<span>Connect</span>
+        </div>
+
+        <div class="nav-links">
+            <a href="/">Home</a>
+            <a href="#about">About</a>
+            <a href="#opportunities">Opportunities</a>
+            <a href="#how-it-works">How It Works</a>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="/login" class="login-btn">Login</a>
+            <a href="/register" class="register-btn">Register</a>
+        </div>
+
+    </nav>
+
+
+    <!-- Hero Section -->
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <div class="hero-text">
+
+                <p class="tagline">
+                    COMMUNITY • VOLUNTEER • IMPACT
+                </p>
+
+                <h1>
+                    Connect Your Skills<br>
+                    With <span>Purpose.</span>
+                </h1>
+
+                <p class="hero-description">
+                    SevaConnect helps volunteers discover meaningful
+                    opportunities and enables organizations to find
+                    the right people for their causes.
+                </p>
+
+                <div class="hero-buttons">
+
+                    <a href="#opportunities" class="primary-btn">
+                        Find Opportunities →
+                    </a>
+
+                    <a href="/register" class="secondary-btn">
+                        Join as Volunteer →
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div class="hero-card">
+
+                <div class="card-icon">
+                    🤝
+                </div>
+
+                <h3>
+                    Smart Volunteer Matching
+                </h3>
+
+                <p>
+                    Discover opportunities based on your skills,
+                    interests, availability and preferences.
+                </p>
+
+                <div class="match-example">
+
+                    <div class="match-title">
+                        Your Recommended Match
+                    </div>
+
+                    <div class="match-score">
+                        92%
+                    </div>
+
+                    <div class="match-label">
+                        Skill & Interest Compatibility
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- About Section -->
+    <section class="about" id="about">
+
+        <div class="section-heading">
+
+            <p class="small-title">
+                ABOUT SEVACONNECT
+            </p>
+
+            <h2>
+                Turning Volunteerism Into <span>Social Impact</span>
+            </h2>
+
+            <p>
+                SevaConnect is a community volunteer management and
+                social impact platform designed to connect volunteers
+                with organizations and meaningful opportunities.
+            </p>
+
+        </div>
+
+
+        <div class="feature-container">
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    🎯
+                </div>
+
+                <h3>
+                    Personalized Matching
+                </h3>
+
+                <p>
+                    Opportunities can be matched using skills,
+                    interests, availability, experience, location
+                    and preferred mode.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    🏢
+                </div>
+
+                <h3>
+                    NGO Opportunities
+                </h3>
+
+                <p>
+                    Organizations can create opportunities and
+                    discover volunteers whose profiles match
+                    their requirements.
+                </p>
+
+            </div>
+
+
+            <div class="feature-card">
+
+                <div class="feature-icon">
+                    📊
+                </div>
+
+                <h3>
+                    Track Your Impact
+                </h3>
+
+                <p>
+                    Applications, participation and feedback can
+                    help volunteers and organizations track their
+                    social impact.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Opportunities Section -->
+    <section class="opportunities" id="opportunities">
+
+        <div class="section-heading">
+
+            <p class="small-title">
+                VOLUNTEER OPPORTUNITIES
+            </p>
+
+            <h2>
+                Find a Cause That <span>Matters</span>
+            </h2>
+
+            <p>
+                Explore different areas where your skills and time
+                can make a difference.
+            </p>
+
+        </div>
+
+
+        <div class="cause-container">
+
+            <div class="cause-card">
+                <div>📚</div>
+                <h3>Education</h3>
+                <p>Support learning and educational initiatives.</p>
+            </div>
+
+            <div class="cause-card">
+                <div>🏥</div>
+                <h3>Healthcare</h3>
+                <p>Contribute to community health initiatives.</p>
+            </div>
+
+            <div class="cause-card">
+                <div>🌱</div>
+                <h3>Environment</h3>
+                <p>Participate in environmental activities.</p>
+            </div>
+
+            <div class="cause-card">
+                <div>👩‍👧</div>
+                <h3>Women Empowerment</h3>
+                <p>Support initiatives promoting equality and skills.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- How It Works -->
+    <section class="how-it-works" id="how-it-works">
+
+        <div class="section-heading">
+
+            <p class="small-title">
+                HOW IT WORKS
+            </p>
+
+            <h2>
+                From Profile to <span>Impact</span>
+            </h2>
+
+        </div>
+
+
+        <div class="steps">
+
+            <div class="step">
+
+                <div class="step-number">
+                    01
+                </div>
+
+                <h3>
+                    Create Profile
+                </h3>
+
+                <p>
+                    Add your skills, interests, availability
+                    and experience.
+                </p>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">
+                    02
+                </div>
+
+                <h3>
+                    Get Matched
+                </h3>
+
+                <p>
+                    The platform evaluates opportunities
+                    against your profile.
+                </p>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">
+                    03
+                </div>
+
+                <h3>
+                    Volunteer
+                </h3>
+
+                <p>
+                    Apply for suitable opportunities and
+                    participate in meaningful activities.
+                </p>
+
+            </div>
+
+
+            <div class="step">
+
+                <div class="step-number">
+                    04
+                </div>
+
+                <h3>
+                    Make an Impact
+                </h3>
+
+                <p>
+                    Track participation and share feedback
+                    to improve future recommendations.
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Footer -->
+    <footer>
+
+        <div class="footer-logo">
+            Seva<span>Connect</span>
+        </div>
+
+        <p>
+            Community Volunteer Management and Social Impact Platform
+        </p>
+
+        <p class="copyright">
+            © 2026 SevaConnect. Academic Project.
+        </p>
+
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,101 @@
+opportunity_id,ngo_id,ngo_name,cause,opportunity_title,required_skills,location,availability,hours_required,mode,experience_required
+O001,NGO001,Udaan Community Foundation,Education,Weekend Teaching Support,Fundraising,Noida,Tuesday,8,Online,Advanced
+O002,NGO002,Sahyog Seva Trust,Healthcare,Digital Literacy Workshop,Web Development,Alwar,Thursday; Wednesday,6,Hybrid,Beginner
+O003,NGO003,Nayi Disha Foundation,Environment,Community Health Camp,Event Management; Public Speaking,Remote,Saturday,8,Hybrid,Intermediate
+O004,NGO004,Aarambh Social Initiative,Child Welfare,Tree Plantation Drive,Teaching; Digital Literacy,Gurugram,Sunday; Thursday,5,Hybrid,Beginner
+O005,NGO005,Saksham Welfare Society,Women Empowerment,Women Skill Development Program,Communication; Python,Kota,Wednesday,6,Offline,Beginner
+O006,NGO006,Jeevan Jyoti Trust,Digital Literacy,Child Education Support,Fundraising,Udaipur,Saturday; Friday; Sunday,8,Online,Intermediate
+O007,NGO007,Prerna Education Foundation,Rural Development,Social Media Awareness Campaign,Public Speaking; Event Management; Fundraising,Delhi,Thursday; Monday; Saturday,8,Hybrid,Advanced
+O008,NGO008,Green Roots India,Disability Support,Food Distribution Drive,Photography; Digital Literacy; Event Management,Ajmer,Thursday,4,Online,Intermediate
+O009,NGO009,Helping Hands Jaipur,Animal Welfare,Senior Citizen Support Program,Graphic Design; Content Writing,Jodhpur,Wednesday; Saturday,4,Online,Beginner
+O010,NGO010,Asha Kiran Foundation,Elderly Care,Animal Care Assistance,Digital Literacy; Python; Communication,Jaipur,Monday,5,Offline,Advanced
+O011,NGO011,Sparsh Community Trust,Poverty Alleviation,Rural Digital Literacy Camp,Healthcare; First Aid; Web Development,Noida,Monday; Friday; Saturday,6,Online,Advanced
+O012,NGO012,Navjeevan Social Group,Disaster Relief,Fundraising Campaign,Translation,Alwar,Sunday; Saturday,5,Hybrid,Beginner
+O013,NGO013,Shiksha Setu Foundation,Education,Disaster Preparedness Workshop,Public Speaking; Content Writing,Remote,Friday,6,Offline,Beginner
+O014,NGO014,Swasthya Sahayata Trust,Healthcare,Accessibility Support Program,Digital Literacy; Graphic Design; Translation,Gurugram,Wednesday,6,Online,Beginner
+O015,NGO015,Bal Vikas Initiative,Environment,Community Event Volunteer,Event Management; First Aid,Kota,Sunday; Friday,6,Hybrid,Advanced
+O016,NGO016,Sakhi Empowerment Society,Child Welfare,Weekend Teaching Support,Teaching; Public Speaking; Data Entry,Udaipur,Wednesday; Monday; Tuesday,4,Hybrid,Intermediate
+O017,NGO017,Seva Jyoti Foundation,Women Empowerment,Digital Literacy Workshop,Healthcare; Teaching,Delhi,Sunday,3,Hybrid,Advanced
+O018,NGO018,CareBridge India,Digital Literacy,Community Health Camp,Web Development; Digital Literacy,Ajmer,Saturday; Monday; Sunday,8,Hybrid,Beginner
+O019,NGO019,Digital Udaan Trust,Rural Development,Tree Plantation Drive,Translation; Event Management,Jodhpur,Tuesday; Wednesday,4,Hybrid,Intermediate
+O020,NGO020,Jeevan Saathi Foundation,Disability Support,Women Skill Development Program,Web Development; Communication; Teaching,Jaipur,Tuesday,6,Offline,Advanced
+O021,NGO021,Nirman Rural Development,Animal Welfare,Child Education Support,Fundraising,Noida,Saturday; Thursday,5,Hybrid,Intermediate
+O022,NGO022,Hope for All Society,Elderly Care,Social Media Awareness Campaign,Fundraising; Graphic Design,Alwar,Monday; Wednesday; Thursday,2,Online,Advanced
+O023,NGO023,Prayas Community Foundation,Poverty Alleviation,Food Distribution Drive,Digital Literacy; Fundraising; Data Entry,Remote,Monday; Tuesday,5,Hybrid,Beginner
+O024,NGO024,Samarth Disability Support,Disaster Relief,Senior Citizen Support Program,Photography,Gurugram,Tuesday; Sunday,4,Online,Intermediate
+O025,NGO025,Pashu Mitra Foundation,Education,Animal Care Assistance,Teaching,Kota,Saturday; Thursday,3,Offline,Intermediate
+O026,NGO026,Ankur Youth Initiative,Healthcare,Rural Digital Literacy Camp,Event Management; Fundraising; Communication,Udaipur,Sunday; Wednesday; Monday,5,Hybrid,Beginner
+O027,NGO027,Disha Disaster Relief,Environment,Fundraising Campaign,Teaching; Event Management,Delhi,Sunday,4,Hybrid,Intermediate
+O028,NGO028,Srijan Environment Trust,Child Welfare,Disaster Preparedness Workshop,First Aid; Healthcare; Data Entry,Ajmer,Wednesday; Monday,5,Offline,Intermediate
+O029,NGO029,Vridhi Elder Care Foundation,Women Empowerment,Accessibility Support Program,Communication,Jodhpur,Wednesday; Monday; Thursday,2,Offline,Intermediate
+O030,NGO030,Lok Kalyan Seva Trust,Digital Literacy,Community Event Volunteer,First Aid; Fundraising; Python,Jaipur,Sunday; Wednesday,8,Online,Beginner
+O031,NGO001,Udaan Community Foundation,Education,Weekend Teaching Support,Content Writing; Python,Noida,Saturday; Monday; Friday,6,Offline,Intermediate
+O032,NGO002,Sahyog Seva Trust,Healthcare,Digital Literacy Workshop,Social Media; Graphic Design,Alwar,Tuesday,4,Offline,Beginner
+O033,NGO003,Nayi Disha Foundation,Environment,Community Health Camp,Social Media; First Aid; Communication,Remote,Monday; Tuesday; Thursday,5,Hybrid,Advanced
+O034,NGO004,Aarambh Social Initiative,Child Welfare,Tree Plantation Drive,Data Entry; Translation,Gurugram,Wednesday; Tuesday; Thursday,2,Online,Intermediate
+O035,NGO005,Saksham Welfare Society,Women Empowerment,Women Skill Development Program,Public Speaking; First Aid; Social Media,Kota,Monday; Wednesday; Friday,2,Online,Intermediate
+O036,NGO006,Jeevan Jyoti Trust,Digital Literacy,Child Education Support,Python; Teaching,Udaipur,Sunday; Wednesday,2,Hybrid,Beginner
+O037,NGO007,Prerna Education Foundation,Rural Development,Social Media Awareness Campaign,First Aid; Event Management; Public Speaking,Delhi,Sunday; Saturday; Monday,5,Hybrid,Advanced
+O038,NGO008,Green Roots India,Disability Support,Food Distribution Drive,Data Entry,Ajmer,Thursday; Friday; Tuesday,2,Online,Beginner
+O039,NGO009,Helping Hands Jaipur,Animal Welfare,Senior Citizen Support Program,Web Development; Fundraising,Jodhpur,Tuesday; Monday; Sunday,8,Online,Intermediate
+O040,NGO010,Asha Kiran Foundation,Elderly Care,Animal Care Assistance,Content Writing; Digital Literacy; Communication,Jaipur,Thursday; Sunday,4,Hybrid,Advanced
+O041,NGO011,Sparsh Community Trust,Poverty Alleviation,Rural Digital Literacy Camp,Data Entry,Noida,Wednesday,2,Hybrid,Advanced
+O042,NGO012,Navjeevan Social Group,Disaster Relief,Fundraising Campaign,Public Speaking; Social Media,Alwar,Sunday; Saturday; Friday,3,Online,Beginner
+O043,NGO013,Shiksha Setu Foundation,Education,Disaster Preparedness Workshop,Social Media; Communication; Content Writing,Remote,Saturday; Sunday,8,Online,Beginner
+O044,NGO014,Swasthya Sahayata Trust,Healthcare,Accessibility Support Program,Web Development; Social Media; Fundraising,Gurugram,Saturday; Wednesday,3,Hybrid,Advanced
+O045,NGO015,Bal Vikas Initiative,Environment,Community Event Volunteer,Web Development; Data Entry; Communication,Kota,Friday; Wednesday,2,Online,Intermediate
+O046,NGO016,Sakhi Empowerment Society,Child Welfare,Weekend Teaching Support,Photography,Udaipur,Sunday; Thursday,3,Offline,Beginner
+O047,NGO017,Seva Jyoti Foundation,Women Empowerment,Digital Literacy Workshop,Web Development,Delhi,Sunday; Monday,6,Hybrid,Advanced
+O048,NGO018,CareBridge India,Digital Literacy,Community Health Camp,Python; Data Entry; Content Writing,Ajmer,Tuesday; Friday; Thursday,3,Offline,Beginner
+O049,NGO019,Digital Udaan Trust,Rural Development,Tree Plantation Drive,Content Writing; Healthcare; Event Management,Jodhpur,Thursday,4,Hybrid,Advanced
+O050,NGO020,Jeevan Saathi Foundation,Disability Support,Women Skill Development Program,Communication,Jaipur,Wednesday; Saturday; Thursday,3,Hybrid,Beginner
+O051,NGO021,Nirman Rural Development,Animal Welfare,Child Education Support,Digital Literacy; Communication,Noida,Wednesday,8,Hybrid,Intermediate
+O052,NGO022,Hope for All Society,Elderly Care,Social Media Awareness Campaign,Public Speaking; First Aid,Alwar,Friday; Sunday,5,Offline,Beginner
+O053,NGO023,Prayas Community Foundation,Poverty Alleviation,Food Distribution Drive,Social Media; Translation; Digital Literacy,Remote,Saturday,5,Online,Advanced
+O054,NGO024,Samarth Disability Support,Disaster Relief,Senior Citizen Support Program,Graphic Design,Gurugram,Monday; Tuesday,4,Online,Advanced
+O055,NGO025,Pashu Mitra Foundation,Education,Animal Care Assistance,Translation,Kota,Tuesday,5,Online,Beginner
+O056,NGO026,Ankur Youth Initiative,Healthcare,Rural Digital Literacy Camp,Python; Photography,Udaipur,Wednesday; Tuesday; Thursday,2,Online,Beginner
+O057,NGO027,Disha Disaster Relief,Environment,Fundraising Campaign,Data Entry,Delhi,Sunday,8,Hybrid,Intermediate
+O058,NGO028,Srijan Environment Trust,Child Welfare,Disaster Preparedness Workshop,Social Media,Ajmer,Wednesday,5,Hybrid,Beginner
+O059,NGO029,Vridhi Elder Care Foundation,Women Empowerment,Accessibility Support Program,Digital Literacy; Event Management; Public Speaking,Jodhpur,Monday,2,Online,Beginner
+O060,NGO030,Lok Kalyan Seva Trust,Digital Literacy,Community Event Volunteer,Translation,Jaipur,Sunday,4,Offline,Intermediate
+O061,NGO001,Udaan Community Foundation,Education,Weekend Teaching Support,Python,Noida,Thursday,8,Hybrid,Intermediate
+O062,NGO002,Sahyog Seva Trust,Healthcare,Digital Literacy Workshop,Graphic Design,Alwar,Friday; Sunday,2,Hybrid,Advanced
+O063,NGO003,Nayi Disha Foundation,Environment,Community Health Camp,Event Management; Healthcare; Web Development,Remote,Thursday; Monday,6,Online,Beginner
+O064,NGO004,Aarambh Social Initiative,Child Welfare,Tree Plantation Drive,Translation; Web Development; Data Entry,Gurugram,Monday; Friday; Wednesday,2,Hybrid,Advanced
+O065,NGO005,Saksham Welfare Society,Women Empowerment,Women Skill Development Program,Teaching; Photography; Translation,Kota,Monday; Saturday,5,Online,Intermediate
+O066,NGO006,Jeevan Jyoti Trust,Digital Literacy,Child Education Support,Teaching; Content Writing; First Aid,Udaipur,Wednesday,3,Hybrid,Advanced
+O067,NGO007,Prerna Education Foundation,Rural Development,Social Media Awareness Campaign,Graphic Design; First Aid; Public Speaking,Delhi,Sunday; Wednesday; Tuesday,2,Online,Advanced
+O068,NGO008,Green Roots India,Disability Support,Food Distribution Drive,Content Writing; Translation,Ajmer,Thursday; Saturday; Sunday,8,Offline,Beginner
+O069,NGO009,Helping Hands Jaipur,Animal Welfare,Senior Citizen Support Program,Communication,Jodhpur,Wednesday,3,Offline,Beginner
+O070,NGO010,Asha Kiran Foundation,Elderly Care,Animal Care Assistance,Data Entry,Jaipur,Friday; Thursday,6,Online,Intermediate
+O071,NGO011,Sparsh Community Trust,Poverty Alleviation,Rural Digital Literacy Camp,Photography,Noida,Wednesday; Monday,8,Online,Intermediate
+O072,NGO012,Navjeevan Social Group,Disaster Relief,Fundraising Campaign,Healthcare,Alwar,Thursday; Saturday,5,Online,Intermediate
+O073,NGO013,Shiksha Setu Foundation,Education,Disaster Preparedness Workshop,Digital Literacy,Remote,Thursday; Wednesday; Friday,4,Offline,Advanced
+O074,NGO014,Swasthya Sahayata Trust,Healthcare,Accessibility Support Program,Web Development; Photography,Gurugram,Sunday; Tuesday; Friday,4,Online,Beginner
+O075,NGO015,Bal Vikas Initiative,Environment,Community Event Volunteer,Data Entry,Kota,Wednesday; Sunday; Thursday,6,Hybrid,Intermediate
+O076,NGO016,Sakhi Empowerment Society,Child Welfare,Weekend Teaching Support,Communication,Udaipur,Thursday; Monday,8,Online,Advanced
+O077,NGO017,Seva Jyoti Foundation,Women Empowerment,Digital Literacy Workshop,Fundraising; Data Entry,Delhi,Monday,8,Hybrid,Intermediate
+O078,NGO018,CareBridge India,Digital Literacy,Community Health Camp,Content Writing; Teaching,Ajmer,Sunday,6,Hybrid,Intermediate
+O079,NGO019,Digital Udaan Trust,Rural Development,Tree Plantation Drive,Social Media,Jodhpur,Tuesday,8,Online,Intermediate
+O080,NGO020,Jeevan Saathi Foundation,Disability Support,Women Skill Development Program,Python; Public Speaking,Jaipur,Saturday,5,Online,Intermediate
+O081,NGO021,Nirman Rural Development,Animal Welfare,Child Education Support,Web Development; Public Speaking,Noida,Friday,4,Online,Intermediate
+O082,NGO022,Hope for All Society,Elderly Care,Social Media Awareness Campaign,Fundraising; Graphic Design; Python,Alwar,Saturday,3,Online,Advanced
+O083,NGO023,Prayas Community Foundation,Poverty Alleviation,Food Distribution Drive,Graphic Design; Social Media,Remote,Saturday; Thursday,3,Hybrid,Intermediate
+O084,NGO024,Samarth Disability Support,Disaster Relief,Senior Citizen Support Program,Digital Literacy; Graphic Design; Python,Gurugram,Sunday,2,Online,Beginner
+O085,NGO025,Pashu Mitra Foundation,Education,Animal Care Assistance,Communication; Python; First Aid,Kota,Sunday; Wednesday; Saturday,8,Offline,Advanced
+O086,NGO026,Ankur Youth Initiative,Healthcare,Rural Digital Literacy Camp,Public Speaking; Communication; Social Media,Udaipur,Saturday,8,Hybrid,Advanced
+O087,NGO027,Disha Disaster Relief,Environment,Fundraising Campaign,Healthcare,Delhi,Tuesday; Monday; Sunday,3,Offline,Intermediate
+O088,NGO028,Srijan Environment Trust,Child Welfare,Disaster Preparedness Workshop,Healthcare,Ajmer,Friday; Wednesday; Thursday,6,Offline,Advanced
+O089,NGO029,Vridhi Elder Care Foundation,Women Empowerment,Accessibility Support Program,Web Development,Jodhpur,Thursday; Saturday,8,Online,Advanced
+O090,NGO030,Lok Kalyan Seva Trust,Digital Literacy,Community Event Volunteer,Translation; Digital Literacy,Jaipur,Monday; Tuesday; Wednesday,8,Offline,Intermediate
+O091,NGO001,Udaan Community Foundation,Education,Weekend Teaching Support,Healthcare; Web Development,Noida,Saturday; Friday; Tuesday,3,Online,Advanced
+O092,NGO002,Sahyog Seva Trust,Healthcare,Digital Literacy Workshop,Graphic Design,Alwar,Tuesday; Wednesday; Sunday,3,Online,Advanced
+O093,NGO003,Nayi Disha Foundation,Environment,Community Health Camp,Healthcare,Remote,Wednesday; Monday; Sunday,3,Hybrid,Advanced
+O094,NGO004,Aarambh Social Initiative,Child Welfare,Tree Plantation Drive,Social Media; Data Entry,Gurugram,Friday; Sunday,2,Hybrid,Advanced
+O095,NGO005,Saksham Welfare Society,Women Empowerment,Women Skill Development Program,Social Media,Kota,Saturday,6,Hybrid,Advanced
+O096,NGO006,Jeevan Jyoti Trust,Digital Literacy,Child Education Support,Python; Translation,Udaipur,Monday,2,Hybrid,Advanced
+O097,NGO007,Prerna Education Foundation,Rural Development,Social Media Awareness Campaign,Photography; First Aid,Delhi,Thursday; Friday; Monday,5,Hybrid,Advanced
+O098,NGO008,Green Roots India,Disability Support,Food Distribution Drive,Public Speaking; Event Management,Ajmer,Sunday,8,Online,Intermediate
+O099,NGO009,Helping Hands Jaipur,Animal Welfare,Senior Citizen Support Program,Web Development; Healthcare,Jodhpur,Tuesday,5,Online,Intermediate
+O100,NGO010,Asha Kiran Foundation,Elderly Care,Animal Care Assistance,Photography; Content Writing,Jaipur,Tuesday; Wednesday; Saturday,8,Online,Intermediate

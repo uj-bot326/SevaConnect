@@ -1,0 +1,31 @@
+ngo_id,ngo_name,cause,location
+NGO001,Udaan Community Foundation,Education,Noida
+NGO002,Sahyog Seva Trust,Healthcare,Alwar
+NGO003,Nayi Disha Foundation,Environment,Remote
+NGO004,Aarambh Social Initiative,Child Welfare,Gurugram
+NGO005,Saksham Welfare Society,Women Empowerment,Kota
+NGO006,Jeevan Jyoti Trust,Digital Literacy,Udaipur
+NGO007,Prerna Education Foundation,Rural Development,Delhi
+NGO008,Green Roots India,Disability Support,Ajmer
+NGO009,Helping Hands Jaipur,Animal Welfare,Jodhpur
+NGO010,Asha Kiran Foundation,Elderly Care,Jaipur
+NGO011,Sparsh Community Trust,Poverty Alleviation,Noida
+NGO012,Navjeevan Social Group,Disaster Relief,Alwar
+NGO013,Shiksha Setu Foundation,Education,Remote
+NGO014,Swasthya Sahayata Trust,Healthcare,Gurugram
+NGO015,Bal Vikas Initiative,Environment,Kota
+NGO016,Sakhi Empowerment Society,Child Welfare,Udaipur
+NGO017,Seva Jyoti Foundation,Women Empowerment,Delhi
+NGO018,CareBridge India,Digital Literacy,Ajmer
+NGO019,Digital Udaan Trust,Rural Development,Jodhpur
+NGO020,Jeevan Saathi Foundation,Disability Support,Jaipur
+NGO021,Nirman Rural Development,Animal Welfare,Noida
+NGO022,Hope for All Society,Elderly Care,Alwar
+NGO023,Prayas Community Foundation,Poverty Alleviation,Remote
+NGO024,Samarth Disability Support,Disaster Relief,Gurugram
+NGO025,Pashu Mitra Foundation,Education,Kota
+NGO026,Ankur Youth Initiative,Healthcare,Udaipur
+NGO027,Disha Disaster Relief,Environment,Delhi
+NGO028,Srijan Environment Trust,Child Welfare,Ajmer
+NGO029,Vridhi Elder Care Foundation,Women Empowerment,Jodhpur
+NGO030,Lok Kalyan Seva Trust,Digital Literacy,Jaipur

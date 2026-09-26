@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>NGO Profile | SevaConnect</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<nav class="navbar">
+
+    <div class="logo">
+
+        <span class="logo-icon">
+            🤝
+        </span>
+
+        <span>
+            SevaConnect
+        </span>
+
+    </div>
+
+
+    <div class="nav-links">
+
+        <a href="{{ url_for('ngo_dashboard') }}">
+            Dashboard
+        </a>
+
+        <a href="{{ url_for('ngo_profile') }}"
+           class="active">
+            NGO Profile
+        </a>
+
+        <a href="{{ url_for('create_opportunity') }}">
+            Create Opportunity
+        </a>
+
+        <a href="{{ url_for('logout') }}">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+
+<main class="form-page">
+
+
+    <div class="form-header">
+
+        <div class="form-icon">
+            🏢
+        </div>
+
+        <h1>
+            NGO Profile
+        </h1>
+
+        <p>
+            Tell volunteers about your organization.
+        </p>
+
+    </div>
+
+
+
+    <form
+        method="POST"
+        class="profile-form"
+    >
+
+
+        <div class="form-group">
+
+            <label>
+                NGO Name
+            </label>
+
+            <input
+                type="text"
+                name="name"
+                value="{{ ngo['name'] }}"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Email
+            </label>
+
+            <input
+                type="email"
+                name="email"
+                value="{{ ngo['email'] }}"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Cause / Focus Area
+            </label>
+
+            <select
+                name="cause"
+                required
+            >
+
+                <option value="">
+                    Select cause
+                </option>
+
+                <option value="Education"
+                    {% if ngo['cause'] == 'Education' %}
+                    selected
+                    {% endif %}>
+                    Education
+                </option>
+
+                <option value="Environment"
+                    {% if ngo['cause'] == 'Environment' %}
+                    selected
+                    {% endif %}>
+                    Environment
+                </option>
+
+                <option value="Healthcare"
+                    {% if ngo['cause'] == 'Healthcare' %}
+                    selected
+                    {% endif %}>
+                    Healthcare
+                </option>
+
+                <option value="Animal Welfare"
+                    {% if ngo['cause'] == 'Animal Welfare' %}
+                    selected
+                    {% endif %}>
+                    Animal Welfare
+                </option>
+
+                <option value="Women Empowerment"
+                    {% if ngo['cause'] == 'Women Empowerment' %}
+                    selected
+                    {% endif %}>
+                    Women Empowerment
+                </option>
+
+                <option value="Community Development"
+                    {% if ngo['cause'] == 'Community Development' %}
+                    selected
+                    {% endif %}>
+                    Community Development
+                </option>
+
+                <option value="Food & Hunger"
+                    {% if ngo['cause'] == 'Food & Hunger' %}
+                    selected
+                    {% endif %}>
+                    Food & Hunger
+                </option>
+
+                <option value="Other"
+                    {% if ngo['cause'] == 'Other' %}
+                    selected
+                    {% endif %}>
+                    Other
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Location
+            </label>
+
+            <input
+                type="text"
+                name="location"
+                value="{{ ngo['location'] }}"
+                placeholder="e.g. Jaipur"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="form-group">
+
+            <label>
+                Organization Description
+            </label>
+
+            <textarea
+                name="description"
+                rows="6"
+                placeholder="Tell volunteers about your NGO, mission and activities..."
+            >{{ ngo['description'] or '' }}</textarea>
+
+        </div>
+
+
+
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('ngo_dashboard') }}"
+                class="secondary-button"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="primary-button"
+            >
+                Save NGO Profile
+            </button>
+
+        </div>
+
+
+    </form>
+
+
+</main>
+
+
+
+<footer class="footer">
+
+    <div class="footer-content">
+
+        <div>
+
+            <h3>
+                🤝 SevaConnect
+            </h3>
+
+            <p>
+                Community • Service • Impact
+            </p>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+
+</html>

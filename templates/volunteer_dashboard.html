@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Volunteer Dashboard | SevaConnect</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="navbar">
+
+    <div class="logo">
+        <span class="logo-icon">🤝</span>
+        <span>SevaConnect</span>
+    </div>
+
+    <div class="nav-links">
+
+        <a href="{{ url_for('volunteer_dashboard') }}"
+           class="active">
+            Dashboard
+        </a>
+
+        <a href="{{ url_for('volunteer_profile') }}">
+            My Profile
+        </a>
+
+        <a href="{{ url_for('logout') }}">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+<!-- ================= MAIN ================= -->
+<main class="dashboard-container">
+
+    <!-- Welcome -->
+    <section class="dashboard-header">
+
+        <div>
+            <h1>
+                Welcome,
+                {{ session.get("name", "Volunteer") }} 👋
+            </h1>
+
+            <p>
+                Discover meaningful opportunities and make an impact
+                with SevaConnect.
+            </p>
+        </div>
+
+        <a href="{{ url_for('volunteer_profile') }}"
+           class="primary-button">
+            Edit Profile
+        </a>
+
+    </section>
+
+
+    <!-- ================= STATS ================= -->
+    <section class="stats-grid">
+
+        <!-- Recommendations -->
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                🎯
+            </div>
+
+            <div class="stat-number">
+                {{ recommendations|length }}
+            </div>
+
+            <div class="stat-label">
+                Recommendations
+            </div>
+
+        </div>
+
+
+        <!-- Applications -->
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                📋
+            </div>
+
+            <div class="stat-number">
+                {{ applications|length }}
+            </div>
+
+            <div class="stat-label">
+                Applications
+            </div>
+
+        </div>
+
+
+        <!-- Completed -->
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                🤝
+            </div>
+
+            <div class="stat-number">
+                {{ completed_activities|default(0) }}
+            </div>
+
+            <div class="stat-label">
+                Completed Activities
+            </div>
+
+        </div>
+
+
+        <!-- Profile -->
+        <div class="stat-card">
+
+            <div class="stat-icon">
+                ⭐
+            </div>
+
+            <div class="stat-number">
+                {% if profile %}
+                    ✓
+                {% else %}
+                    !
+                {% endif %}
+            </div>
+
+            <div class="stat-label">
+                {% if profile %}
+                    Profile Saved
+                {% else %}
+                    Complete Profile
+                {% endif %}
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= RECOMMENDATIONS ================= -->
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+                <h2>Recommended Opportunities</h2>
+
+                <p>
+                    Opportunities matched to your skills, interests
+                    and preferences.
+                </p>
+            </div>
+
+        </div>
+
+
+        {% if recommendations %}
+
+        <div class="opportunity-grid">
+
+            {% for opportunity in recommendations %}
+
+            <div class="opportunity-card">
+
+                <div class="opportunity-top">
+
+                    <span class="cause-badge">
+                        {{ opportunity["cause"] }}
+                    </span>
+
+                    <span class="score-badge">
+                        {{ opportunity["score"] }}%
+                        Match
+                    </span>
+
+                </div>
+
+
+                <h3>
+                    {{ opportunity["title"] }}
+                </h3>
+
+
+                <p class="ngo-name">
+                    🏢
+                    {{ opportunity["ngo_name"] or "Organization" }}
+                </p>
+
+
+                <div class="opportunity-details">
+
+                    <span>
+                        📍
+                        {{ opportunity["location"] }}
+                    </span>
+
+                    <span>
+                        💻
+                        {{ opportunity["mode"] }}
+                    </span>
+
+                    <span>
+                        ⏰
+                        {{ opportunity["hours_required"] }}
+                        hrs
+                    </span>
+
+                </div>
+
+
+                <!-- Apply Button -->
+
+                <form
+                    action="{{ url_for(
+                        'apply_opportunity',
+                        opportunity_id=opportunity['opportunity_id']
+                    ) }}"
+                    method="POST"
+                >
+
+                    <button
+                        type="submit"
+                        class="view-btn"
+                    >
+                        Apply Now
+                    </button>
+
+                </form>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                🔍
+            </div>
+
+            <h3>
+                No recommendations yet
+            </h3>
+
+            <p>
+                Complete your profile to receive personalized
+                volunteer opportunities.
+            </p>
+
+            <a href="{{ url_for('volunteer_profile') }}"
+               class="primary-button">
+                Complete Profile
+            </a>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- ================= MY APPLICATIONS ================= -->
+    <section class="dashboard-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <h2>
+                    My Applications
+                </h2>
+
+                <p>
+                    Track the opportunities you have applied for.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if applications %}
+
+        <div class="applications-list">
+
+            {% for application in applications %}
+
+            <div class="application-card">
+
+                <!-- Left -->
+                <div class="application-info">
+
+                    <h3>
+                        {{ application["title"] }}
+                    </h3>
+
+                    <p class="application-ngo">
+
+                        🏢
+                        {{ application["ngo_name"] or "Organization" }}
+
+                    </p>
+
+
+                    <div class="application-meta">
+
+                        <span>
+                            ❤️
+                            {{ application["cause"] }}
+                        </span>
+
+                        <span>
+                            📅
+                            Applied:
+                            {{ application["applied_at"] }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Status -->
+                <div class="application-status">
+
+                    {% if application["status"] == "Accepted" %}
+
+                        <span class="status-badge accepted">
+                            ✓ Accepted
+                        </span>
+
+                    {% elif application["status"] == "Rejected" %}
+
+                        <span class="status-badge rejected">
+                            ✕ Rejected
+                        </span>
+
+                    {% else %}
+
+                        <span class="status-badge pending">
+                            ⏳ Pending
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">
+                📋
+            </div>
+
+            <h3>
+                No applications yet
+            </h3>
+
+            <p>
+                When you apply for an opportunity, it will appear
+                here.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+
+    <!-- ================= PROFILE ================= -->
+    <section class="profile-summary">
+
+        <div>
+
+            <h2>
+                Your Volunteer Profile
+            </h2>
+
+            <p>
+                Keep your profile updated so SevaConnect can provide
+                better recommendations.
+            </p>
+
+            <span class="profile-completion">
+                {% if profile %}
+                    Profile completion: Profile saved
+                {% else %}
+                    Profile completion: Please complete your profile
+                {% endif %}
+            </span>
+
+        </div>
+
+
+        <a href="{{ url_for('volunteer_profile') }}"
+           class="primary-button">
+
+            Edit Profile
+
+        </a>
+
+    </section>
+
+</main>
+
+
+<!-- ================= FOOTER ================= -->
+<footer class="footer">
+
+    <div class="footer-content">
+
+        <div>
+
+            <h3>
+                🤝 SevaConnect
+            </h3>
+
+            <p>
+                Connecting volunteers with meaningful
+                opportunities.
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <p>
+                © 2026 SevaConnect
+            </p>
+
+            <p>
+                Community • Service • Impact
+            </p>
+
+        </div>
+
+    </div>
+
+</footer>
+
+</body>
+</html>

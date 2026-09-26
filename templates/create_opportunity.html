@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Create Opportunity | SevaConnect</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<nav class="navbar">
+
+    <div class="logo">
+
+        <span class="logo-icon">
+            🤝
+        </span>
+
+        <span>
+            SevaConnect
+        </span>
+
+    </div>
+
+
+    <div class="nav-links">
+
+        <a href="{{ url_for('ngo_dashboard') }}">
+            Dashboard
+        </a>
+
+        <a href="{{ url_for('ngo_profile') }}">
+            NGO Profile
+        </a>
+
+        <a href="{{ url_for('create_opportunity') }}"
+           class="active">
+            Create Opportunity
+        </a>
+
+        <a href="{{ url_for('logout') }}">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+
+<main class="form-page">
+
+
+    <div class="form-header">
+
+        <div class="form-icon">
+            📢
+        </div>
+
+        <h1>
+            Create Volunteer Opportunity
+        </h1>
+
+        <p>
+            Create an opportunity that volunteers can discover
+            and apply for.
+        </p>
+
+    </div>
+
+
+
+    <form
+        method="POST"
+        class="profile-form"
+    >
+
+
+        <!-- TITLE -->
+
+        <div class="form-group">
+
+            <label>
+                Opportunity Title
+            </label>
+
+            <input
+                type="text"
+                name="title"
+                placeholder="e.g. Weekend Teaching Volunteer"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- DESCRIPTION -->
+
+        <div class="form-group">
+
+            <label>
+                Description
+            </label>
+
+            <textarea
+                name="description"
+                rows="5"
+                placeholder="Describe what the volunteer will do..."
+                required
+            ></textarea>
+
+        </div>
+
+
+
+        <!-- CAUSE -->
+
+        <div class="form-group">
+
+            <label>
+                Cause
+            </label>
+
+            <select
+                name="cause"
+                required
+            >
+
+                <option value="">
+                    Select cause
+                </option>
+
+                <option value="Education">
+                    Education
+                </option>
+
+                <option value="Environment">
+                    Environment
+                </option>
+
+                <option value="Healthcare">
+                    Healthcare
+                </option>
+
+                <option value="Animal Welfare">
+                    Animal Welfare
+                </option>
+
+                <option value="Women Empowerment">
+                    Women Empowerment
+                </option>
+
+                <option value="Community Development">
+                    Community Development
+                </option>
+
+                <option value="Food & Hunger">
+                    Food & Hunger
+                </option>
+
+                <option value="Other">
+                    Other
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- SKILLS -->
+
+        <div class="form-group">
+
+            <label>
+                Required Skills
+            </label>
+
+            <input
+                type="text"
+                name="required_skills"
+                placeholder="e.g. Teaching, Communication, Python"
+                required
+            >
+
+            <small>
+                Separate multiple skills with commas.
+            </small>
+
+        </div>
+
+
+
+        <!-- LOCATION -->
+
+        <div class="form-group">
+
+            <label>
+                Location
+            </label>
+
+            <input
+                type="text"
+                name="location"
+                placeholder="e.g. Jaipur or Remote"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- AVAILABILITY -->
+
+        <div class="form-group">
+
+            <label>
+                Availability
+            </label>
+
+            <input
+                type="text"
+                name="availability"
+                placeholder="e.g. Saturday, Sunday"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- HOURS -->
+
+        <div class="form-group">
+
+            <label>
+                Hours Required
+            </label>
+
+            <input
+                type="number"
+                name="hours_required"
+                min="1"
+                max="100"
+                placeholder="e.g. 5"
+                required
+            >
+
+        </div>
+
+
+
+        <!-- MODE -->
+
+        <div class="form-group">
+
+            <label>
+                Volunteering Mode
+            </label>
+
+            <select
+                name="mode"
+                required
+            >
+
+                <option value="">
+                    Select mode
+                </option>
+
+                <option value="Online">
+                    Online
+                </option>
+
+                <option value="Offline">
+                    Offline
+                </option>
+
+                <option value="Hybrid">
+                    Hybrid
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- EXPERIENCE -->
+
+        <div class="form-group">
+
+            <label>
+                Experience Required
+            </label>
+
+            <select
+                name="experience_required"
+                required
+            >
+
+                <option value="beginner">
+                    Beginner
+                </option>
+
+                <option value="intermediate">
+                    Intermediate
+                </option>
+
+                <option value="advanced">
+                    Advanced
+                </option>
+
+            </select>
+
+        </div>
+
+
+
+        <!-- BUTTONS -->
+
+        <div class="form-actions">
+
+            <a
+                href="{{ url_for('ngo_dashboard') }}"
+                class="secondary-button"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="primary-button"
+            >
+                Publish Opportunity
+            </button>
+
+        </div>
+
+
+    </form>
+
+
+</main>
+
+
+
+<footer class="footer">
+
+    <div class="footer-content">
+
+        <div>
+
+            <h3>
+                🤝 SevaConnect
+            </h3>
+
+            <p>
+                Community • Service • Impact
+            </p>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+
+</html>
