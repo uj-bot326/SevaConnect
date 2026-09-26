@@ -1326,5 +1326,296 @@ footer .copyright {
 
 }
 
+/* =========================================================
+   PROFESSIONAL PASSWORD TOGGLE
+   ========================================================= */
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 52px !important;
+    box-sizing: border-box;
+}
+
+.password-wrapper .input-icon {
+    pointer-events: none;
+}
+
+.password-toggle {
+    position: absolute;
+
+    right: 10px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 36px;
+    height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 8px;
+
+    background: transparent;
+
+    color: #64748b;
+
+    cursor: pointer;
+
+    font-size: 16px;
+
+    padding: 0;
+
+    transition:
+        color 0.2s ease,
+        background-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: #166534;
+
+    background-color: rgba(22, 101, 52, 0.08);
+}
+
+.password-toggle:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.password-toggle:focus {
+    outline: none;
+
+    color: #166534;
+
+    background-color: rgba(22, 101, 52, 0.08);
+}
+
+.password-toggle i {
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   AUTH INPUT ICONS
+   ========================================================= */
+
+.input-wrapper,
+.password-wrapper {
+    position: relative;
+}
+
+.input-wrapper .input-icon,
+.password-wrapper .input-icon {
+    position: absolute;
+
+    left: 16px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #64748b;
+
+    font-size: 15px;
+
+    z-index: 2;
+
+    pointer-events: none;
+}
+
+.input-wrapper input,
+.password-wrapper input,
+.input-wrapper select {
+    padding-left: 45px;
+}
+
+
+/* =========================================================
+   PASSWORD HINT
+   ========================================================= */
+
+.password-hint {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   AUTH ERROR MESSAGE
+   ========================================================= */
+
+.alert-error {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-bottom: 20px;
+
+    padding: 12px 15px;
+
+    border-radius: 8px;
+
+    background: #fef2f2;
+
+    color: #b91c1c;
+
+    border: 1px solid #fecaca;
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   REGISTER CARD
+   ========================================================= */
+
+.register-card {
+    max-width: 500px;
+}
+
+/* =========================================================
+   SEVACONNECT LOGIN / REGISTER PASSWORD EYE
+   ========================================================= */
+
+.login-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.login-input-wrapper > i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    color: #64748b;
+    font-size: 15px;
+
+    pointer-events: none;
+    z-index: 2;
+}
+
+.login-input-wrapper input,
+.login-input-wrapper select {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding-left: 44px;
+}
+
+
+/* PASSWORD */
+
+.login-password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.login-password-wrapper input {
+    width: 100%;
+    box-sizing: border-box;
+
+    padding-left: 44px !important;
+    padding-right: 50px !important;
+}
+
+.password-left-icon {
+    position: absolute;
+
+    left: 15px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: #64748b;
+
+    font-size: 15px;
+
+    pointer-events: none;
+
+    z-index: 2;
+}
+
+
+/* EYE BUTTON */
+
+.login-password-toggle {
+    position: absolute;
+
+    right: 8px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 36px;
+    height: 36px;
+
+    border: none;
+    background: transparent;
+
+    color: #64748b;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    border-radius: 7px;
+
+    font-size: 16px;
+
+    padding: 0;
+
+    transition: all 0.2s ease;
+}
+
+.login-password-toggle:hover {
+    color: #166534;
+    background: rgba(22, 101, 52, 0.08);
+}
+
+.login-password-toggle:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.login-password-toggle:focus {
+    outline: none;
+    color: #166534;
+}
+
+.login-password-toggle i {
+    pointer-events: none;
+}
+
+/* =========================================================
+   SEVACONNECT AUTH PAGE FONT
+   ========================================================= */
+
+.auth-page,
+.auth-page input,
+.auth-page select,
+.auth-page button,
+.auth-page label,
+.auth-page h1,
+.auth-page h2,
+.auth-page p,
+.auth-page a {
+    font-family: "Poppins", sans-serif;
+}
+
 
 
