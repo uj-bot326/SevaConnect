@@ -6,7 +6,7 @@
 
     <title>Login | SevaConnect</title>
 
-    <!-- Poppins Font -->
+    <!-- Poppins -->
     <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet"
@@ -18,228 +18,245 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
 
-    <!-- Main CSS -->
     <link
         rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}"
     >
 
     <style>
-        /* =====================================================
+
+        /* ================================
            LOGIN PAGE
-           ===================================================== */
+        ================================= */
 
-        .auth-page {
-            font-family: "Poppins", sans-serif;
+        .login-page {
+            margin: 0;
             min-height: 100vh;
-            background: linear-gradient(
-                135deg,
-                #f0fdf4 0%,
-                #ffffff 50%,
-                #eff6ff 100%
-            );
-        }
 
-        /* NAVBAR */
-
-        .auth-page .navbar {
-            background: rgba(255, 255, 255, 0.96);
-            border-bottom: 1px solid #e5e7eb;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-        }
-
-        .auth-page .logo {
-            text-decoration: none;
             font-family: "Poppins", sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #f0fdf4,
+                    #ffffff 50%,
+                    #eff6ff
+                );
+
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        /* ================================
+           NAVBAR
+        ================================= */
+
+        .login-page .navbar {
+            width: 100%;
+            background: rgba(255,255,255,0.96);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .login-page .logo {
+            color: #15803d;
+            text-decoration: none;
             font-size: 27px;
             font-weight: 700;
-            color: #15803d;
         }
 
-        .auth-page .nav-links a {
-            font-family: "Poppins", sans-serif;
-            font-weight: 500;
-        }
 
-        /* AUTH CONTAINER */
+        /* ================================
+           MAIN AREA
+        ================================= */
 
-        .auth-container {
-            min-height: calc(100vh - 150px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .login-main {
+            flex: 1;
 
-            padding: 60px 20px;
-        }
-
-        /* CARD */
-
-        .auth-card {
             width: 100%;
-            max-width: 440px;
 
-            background: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
-            padding: 42px 42px 36px;
-
-            border-radius: 20px;
-
-            border: 1px solid #e5e7eb;
-
-            box-shadow:
-                0 20px 50px rgba(15, 23, 42, 0.10);
+            padding: 60px 25px;
 
             box-sizing: border-box;
         }
 
-        /* HEADER */
 
-        .auth-header {
-            text-align: center;
-            margin-bottom: 30px;
+        /* ================================
+           LOGIN CARD
+        ================================= */
+
+        .login-card {
+            width: 100%;
+            max-width: 520px;
+
+            background: white;
+
+            padding: 45px 50px;
+
+            border-radius: 20px;
+
+            border: 1px solid #e2e8f0;
+
+            box-shadow:
+                0 20px 55px rgba(15,23,42,0.10);
+
+            box-sizing: border-box;
         }
 
-        .auth-icon {
-            width: 58px;
-            height: 58px;
+
+        /* ================================
+           HEADER
+        ================================= */
+
+        .login-header {
+            text-align: center;
+
+            margin-bottom: 35px;
+        }
+
+        .login-icon {
+            width: 62px;
+            height: 62px;
 
             margin: 0 auto 18px;
+
+            border-radius: 17px;
+
+            background: #dcfce7;
+
+            color: #15803d;
 
             display: flex;
             align-items: center;
             justify-content: center;
 
-            border-radius: 16px;
-
-            background: #dcfce7;
-            color: #15803d;
-
-            font-size: 23px;
+            font-size: 25px;
         }
 
-        .auth-header h1 {
-            margin: 0 0 8px;
+        .login-header h1 {
+            margin: 0 0 10px;
 
-            font-family: "Poppins", sans-serif;
+            color: #172554;
 
-            font-size: 30px;
-            line-height: 1.25;
+            font-size: 31px;
 
             font-weight: 700;
 
-            color: #172554;
+            line-height: 1.25;
         }
 
-        .auth-header p {
+        .login-header p {
             margin: 0;
 
-            font-family: "Poppins", sans-serif;
+            color: #64748b;
 
             font-size: 14px;
+
             line-height: 1.7;
-
-            color: #64748b;
         }
 
-        /* ERROR */
 
-        .alert-error {
+        /* ================================
+           FORM
+        ================================= */
+
+        .login-form {
             display: flex;
-            align-items: center;
-            gap: 9px;
 
-            margin-bottom: 20px;
-            padding: 12px 14px;
-
-            border-radius: 10px;
-
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-
-            color: #b91c1c;
-
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        /* FORM */
-
-        .auth-form {
-            display: flex;
             flex-direction: column;
-            gap: 20px;
+
+            gap: 22px;
         }
 
-        .form-group {
+        .login-group {
             width: 100%;
         }
 
-        .form-group label {
+        .login-group label {
             display: block;
 
-            margin-bottom: 8px;
-
-            font-family: "Poppins", sans-serif;
-
-            font-size: 13px;
-            font-weight: 600;
+            margin-bottom: 9px;
 
             color: #334155;
+
+            font-size: 14px;
+
+            font-weight: 600;
         }
 
-        /* INPUT */
+
+        /* ================================
+           INPUT WRAPPER
+        ================================= */
 
         .login-input-wrapper,
         .login-password-wrapper {
             position: relative;
+
             width: 100%;
         }
+
+
+        /* ================================
+           LEFT ICON
+        ================================= */
 
         .login-input-wrapper > i,
         .password-left-icon {
             position: absolute;
 
-            left: 15px;
+            left: 17px;
+
             top: 50%;
 
             transform: translateY(-50%);
 
             color: #94a3b8;
 
-            font-size: 14px;
+            font-size: 15px;
 
             pointer-events: none;
 
             z-index: 2;
         }
 
+
+        /* ================================
+           INPUTS
+        ================================= */
+
         .login-input-wrapper input,
         .login-password-wrapper input {
+
             width: 100%;
-            height: 48px;
+
+            height: 54px;
 
             box-sizing: border-box;
 
-            border: 1px solid #dbe2ea;
-            border-radius: 10px;
+            padding-left: 48px;
+
+            padding-right: 18px;
+
+            border: 1px solid #d7dee8;
+
+            border-radius: 11px;
 
             background: #ffffff;
 
-            padding-left: 43px;
-            padding-right: 15px;
-
-            outline: none;
+            color: #1e293b;
 
             font-family: "Poppins", sans-serif;
 
-            font-size: 13px;
-            font-weight: 400;
+            font-size: 14px;
 
-            color: #1e293b;
+            outline: none;
 
-            transition:
-                border-color 0.2s ease,
-                box-shadow 0.2s ease;
+            transition: 0.2s ease;
         }
 
         .login-input-wrapper input::placeholder,
@@ -249,56 +266,71 @@
 
         .login-input-wrapper input:focus,
         .login-password-wrapper input:focus {
+
             border-color: #22c55e;
 
             box-shadow:
-                0 0 0 3px rgba(34, 197, 94, 0.12);
+                0 0 0 3px rgba(34,197,94,0.12);
         }
 
-        /* PASSWORD */
+
+        /* ================================
+           PASSWORD INPUT
+        ================================= */
 
         .login-password-wrapper input {
-            padding-right: 52px;
+            padding-right: 58px;
         }
 
+
+        /* ================================
+           EYE BUTTON
+        ================================= */
+
         .login-password-toggle {
+
             position: absolute;
 
-            right: 7px;
+            right: 9px;
+
             top: 50%;
 
             transform: translateY(-50%);
 
-            width: 36px;
-            height: 36px;
+            width: 38px;
+
+            height: 38px;
 
             border: none;
-            border-radius: 8px;
 
             background: transparent;
+
+            border-radius: 8px;
 
             color: #64748b;
 
             display: flex;
+
             align-items: center;
+
             justify-content: center;
 
             cursor: pointer;
 
-            font-size: 15px;
+            font-size: 16px;
 
-            transition:
-                color 0.2s ease,
-                background 0.2s ease;
+            transition: 0.2s ease;
         }
 
         .login-password-toggle:hover {
+
             color: #15803d;
 
             background: #f0fdf4;
         }
 
         .login-password-toggle:focus {
+
             outline: none;
 
             color: #15803d;
@@ -306,20 +338,22 @@
             background: #f0fdf4;
         }
 
-        .login-password-toggle:active {
-            transform: translateY(-50%) scale(0.94);
-        }
 
-        /* LOGIN BUTTON */
+        /* ================================
+           LOGIN BUTTON
+        ================================= */
 
-        .auth-submit {
+        .login-button {
+
             width: 100%;
-            height: 48px;
 
-            margin-top: 4px;
+            height: 54px;
+
+            margin-top: 5px;
 
             border: none;
-            border-radius: 10px;
+
+            border-radius: 11px;
 
             background: #15803d;
 
@@ -327,54 +361,56 @@
 
             font-family: "Poppins", sans-serif;
 
-            font-size: 14px;
+            font-size: 15px;
+
             font-weight: 600;
 
             cursor: pointer;
 
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 9px;
 
-            transition:
-                background 0.2s ease,
-                transform 0.2s ease,
-                box-shadow 0.2s ease;
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            transition: 0.2s ease;
         }
 
-        .auth-submit:hover {
+        .login-button:hover {
+
             background: #166534;
 
-            box-shadow:
-                0 8px 20px rgba(22, 101, 52, 0.20);
-
             transform: translateY(-1px);
+
+            box-shadow:
+                0 8px 20px rgba(22,101,52,0.20);
         }
 
-        .auth-submit:active {
-            transform: translateY(0);
-        }
 
-        /* FOOTER LINK */
+        /* ================================
+           REGISTER LINK
+        ================================= */
 
-        .auth-footer {
+        .login-register {
+
             text-align: center;
 
-            margin-top: 25px;
+            margin-top: 27px;
         }
 
-        .auth-footer p {
+        .login-register p {
+
             margin: 0;
 
-            font-family: "Poppins", sans-serif;
+            color: #64748b;
 
             font-size: 13px;
-
-            color: #64748b;
         }
 
-        .auth-footer a {
+        .login-register a {
+
             color: #15803d;
 
             font-weight: 600;
@@ -382,45 +418,46 @@
             text-decoration: none;
         }
 
-        .auth-footer a:hover {
+        .login-register a:hover {
+
             text-decoration: underline;
         }
 
-        /* FOOTER */
 
-        .auth-page .footer {
-            font-family: "Poppins", sans-serif;
-        }
-
-        /* MOBILE */
+        /* ================================
+           MOBILE
+        ================================= */
 
         @media (max-width: 600px) {
 
-            .auth-container {
+            .login-main {
                 padding: 35px 16px;
             }
 
-            .auth-card {
-                padding: 32px 24px;
-                border-radius: 16px;
+            .login-card {
+
+                max-width: 100%;
+
+                padding: 35px 25px;
             }
 
-            .auth-header h1 {
-                font-size: 26px;
+            .login-header h1 {
+                font-size: 27px;
             }
 
-            .auth-page .logo {
+            .login-page .logo {
                 font-size: 23px;
             }
-
         }
+
     </style>
 </head>
 
 
-<body class="auth-page">
+<body class="login-page">
 
     <!-- NAVBAR -->
+
     <nav class="navbar">
 
         <div class="nav-container">
@@ -450,14 +487,20 @@
 
 
     <!-- LOGIN -->
-    <main class="auth-container">
 
-        <div class="auth-card">
+    <main class="login-main">
 
-            <div class="auth-header">
+        <div class="login-card">
 
-                <div class="auth-icon">
+
+            <!-- HEADER -->
+
+            <div class="login-header">
+
+                <div class="login-icon">
+
                     <i class="fa-solid fa-right-to-bracket"></i>
+
                 </div>
 
                 <h1>
@@ -470,6 +513,8 @@
 
             </div>
 
+
+            <!-- ERROR -->
 
             {% if error %}
 
@@ -486,15 +531,18 @@
             {% endif %}
 
 
+            <!-- FORM -->
+
             <form
                 method="POST"
                 action="{{ url_for('login') }}"
-                class="auth-form"
+                class="login-form"
             >
+
 
                 <!-- EMAIL -->
 
-                <div class="form-group">
+                <div class="login-group">
 
                     <label for="email">
                         Email Address
@@ -508,7 +556,7 @@
                             type="email"
                             id="email"
                             name="email"
-                            placeholder="Enter your email"
+                            placeholder="Enter your email address"
                             autocomplete="email"
                             required
                         >
@@ -520,7 +568,7 @@
 
                 <!-- PASSWORD -->
 
-                <div class="form-group">
+                <div class="login-group">
 
                     <label for="login-password">
                         Password
@@ -560,11 +608,11 @@
                 </div>
 
 
-                <!-- LOGIN -->
+                <!-- LOGIN BUTTON -->
 
                 <button
                     type="submit"
-                    class="auth-submit"
+                    class="login-button"
                 >
 
                     <i class="fa-solid fa-right-to-bracket"></i>
@@ -576,9 +624,9 @@
             </form>
 
 
-            <!-- REGISTER LINK -->
+            <!-- REGISTER -->
 
-            <div class="auth-footer">
+            <div class="login-register">
 
                 <p>
 
@@ -592,41 +640,10 @@
 
             </div>
 
+
         </div>
 
     </main>
-
-
-    <!-- FOOTER -->
-
-    <footer class="footer">
-
-        <div class="footer-container">
-
-            <div class="footer-brand">
-
-                <div class="footer-logo">
-                    SevaConnect
-                </div>
-
-                <p>
-                    Connecting volunteers with meaningful
-                    opportunities to create social impact.
-                </p>
-
-            </div>
-
-            <div class="footer-bottom">
-
-                <p>
-                    © 2026 SevaConnect. All rights reserved.
-                </p>
-
-            </div>
-
-        </div>
-
-    </footer>
 
 
     <!-- PASSWORD TOGGLE -->
@@ -642,7 +659,9 @@
                 document.getElementById("login-eye-icon");
 
             const button =
-                document.querySelector(".login-password-toggle");
+                document.querySelector(
+                    ".login-password-toggle"
+                );
 
 
             if (password.type === "password") {
