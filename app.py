@@ -1436,115 +1436,117 @@ def ngo_dashboard():
 
     connection = get_db_connection()
 
-    ngo = get_ngo_for_user(
-        connection,
-        session["user_id"]
-    )
+    # --------------------------------------------------------
+    # GET NGO PROFILE
+    # --------------------------------------------------------
 
-    if ngo is None:
+    ngo = connection.execute("""
+        SELECT *
+        FROM ngos
+        WHERE user_id = ?
+    """, (
+        session["user_id"],
+    )).fetchone()
 
-        connection.close()
+    # --------------------------------------------------------
+    # GET OPPORTUNITIES CREATED BY THIS NGO
+    # --------------------------------------------------------
 
-        return redirect(
-            url_for("ngo_profile")
-        )
-
-    opportunities = connection.execute(
-        """
+    opportunities = connection.execute("""
         SELECT *
         FROM opportunities
         WHERE ngo_id = ?
         ORDER BY opportunity_id DESC
-        """,
-        (
-            ngo["ngo_id"],
-        )
-    ).fetchall()
+    """, (
+        ngo["ngo_id"] if ngo else -1,
+    )).fetchall()
 
-    total_applications = connection.execute(
-        """
-        SELECT COUNT(*) AS total
-        FROM applications a
-        JOIN opportunities o
-            ON a.opportunity_id = o.opportunity_id
-        WHERE o.ngo_id = ?
-        """,
-        (
-            ngo["ngo_id"],
-        )
-    ).fetchone()["total"]
+    # --------------------------------------------------------
+    # GET ALL VOLUNTEERS WHO APPLIED
+    # TO THIS NGO'S OPPORTUNITIES
+    # --------------------------------------------------------
 
-    pending_applications = connection.execute(
-        """
-        SELECT COUNT(*) AS total
-        FROM applications a
-        JOIN opportunities o
-            ON a.opportunity_id = o.opportunity_id
-        WHERE o.ngo_id = ?
-        AND a.status = 'Pending'
-        """,
-        (
-            ngo["ngo_id"],
-        )
-    ).fetchone()["total"]
-
-    accepted_applications = connection.execute(
-        """
-        SELECT COUNT(*) AS total
-        FROM applications a
-        JOIN opportunities o
-            ON a.opportunity_id = o.opportunity_id
-        WHERE o.ngo_id = ?
-        AND a.status = 'Accepted'
-        """,
-        (
-            ngo["ngo_id"],
-        )
-    ).fetchone()["total"]
-
-    applicants = connection.execute(
-        """
+    applicants = connection.execute("""
         SELECT
             applications.application_id,
             applications.status,
             applications.applied_at,
-            opportunities.title,
+
+            users.user_id,
             users.name AS volunteer_name,
             users.email AS volunteer_email,
+
             volunteer_profiles.skills,
             volunteer_profiles.interests,
             volunteer_profiles.location,
+            volunteer_profiles.availability,
             volunteer_profiles.experience,
-            volunteer_profiles.preferred_mode
+            volunteer_profiles.preferred_mode,
+            volunteer_profiles.hours_per_week,
+
+            opportunities.opportunity_id,
+            opportunities.title AS opportunity_title
+
         FROM applications
-        JOIN opportunities
-            ON applications.opportunity_id =
-               opportunities.opportunity_id
-        JOIN users
+
+        INNER JOIN users
             ON applications.user_id = users.user_id
+
         LEFT JOIN volunteer_profiles
-            ON applications.user_id =
-               volunteer_profiles.user_id
+            ON applications.user_id = volunteer_profiles.user_id
+
+        INNER JOIN opportunities
+            ON applications.opportunity_id = opportunities.opportunity_id
+
         WHERE opportunities.ngo_id = ?
+
         ORDER BY applications.applied_at DESC
-        """,
-        (
-            ngo["ngo_id"],
-        )
-    ).fetchall()
+    """, (
+        ngo["ngo_id"] if ngo else -1,
+    )).fetchall()
+
+    # --------------------------------------------------------
+    # APPLICATION COUNTS
+    # --------------------------------------------------------
+
+    total_applications = len(applicants)
+
+    pending_applications = sum(
+        1 for applicant in applicants
+        if applicant["status"] == "Pending"
+    )
+
+    accepted_applications = sum(
+        1 for applicant in applicants
+        if applicant["status"] == "Accepted"
+    )
+
+    completed_applications = sum(
+        1 for applicant in applicants
+        if applicant["status"] == "Completed"
+    )
 
     connection.close()
 
     return render_template(
         "ngo_dashboard.html",
-        ngo=ngo,
-        opportunities=opportunities,
-        applicants=applicants,
-        total_applications=total_applications,
-        pending_applications=pending_applications,
-        accepted_applications=accepted_applications
-    )
 
+        ngo=ngo,
+
+        opportunities=opportunities,
+
+        applicants=applicants,
+
+        total_applications=total_applications,
+
+        pending_applications=pending_applications,
+
+        accepted_applications=accepted_applications,
+
+        completed_applications=completed_applications
+    )
+    
+    
 
 # ============================================================
 # UPDATE APPLICATION STATUS
@@ -1554,10 +1556,7 @@ def ngo_dashboard():
     "/ngo/application/<int:application_id>/<string:new_status>",
     methods=["POST"]
 )
-def update_application_status(
-    application_id,
-    new_status
-):
+def update_application_status(application_id, new_status):
 
     if "user_id" not in session:
         return redirect(url_for("login"))
@@ -1573,56 +1572,67 @@ def update_application_status(
     ]
 
     if new_status not in allowed_statuses:
-        return redirect(
-            url_for("ngo_dashboard")
-        )
+        return redirect(url_for("ngo_dashboard"))
 
     connection = get_db_connection()
 
-    ngo = get_ngo_for_user(
-        connection,
-        session["user_id"]
-    )
+    # --------------------------------------------------------
+    # GET NGO
+    # --------------------------------------------------------
 
-    if ngo:
+    ngo = connection.execute("""
+        SELECT *
+        FROM ngos
+        WHERE user_id = ?
+    """, (
+        session["user_id"],
+    )).fetchone()
 
-        application = connection.execute(
-            """
-            SELECT applications.application_id
-            FROM applications
-            JOIN opportunities
-                ON applications.opportunity_id =
-                   opportunities.opportunity_id
-            WHERE applications.application_id = ?
-            AND opportunities.ngo_id = ?
-            """,
-            (
-                application_id,
-                ngo["ngo_id"]
-            )
-        ).fetchone()
+    if ngo is None:
+        connection.close()
+        return redirect(url_for("ngo_dashboard"))
 
-        if application:
+    # --------------------------------------------------------
+    # VERIFY APPLICATION BELONGS TO THIS NGO
+    # --------------------------------------------------------
 
-            connection.execute(
-                """
-                UPDATE applications
-                SET status = ?
-                WHERE application_id = ?
-                """,
-                (
-                    new_status,
-                    application_id
-                )
-            )
+    application = connection.execute("""
+        SELECT
+            applications.application_id
+        FROM applications
 
-            connection.commit()
+        INNER JOIN opportunities
+            ON applications.opportunity_id =
+               opportunities.opportunity_id
 
+        WHERE applications.application_id = ?
+        AND opportunities.ngo_id = ?
+    """, (
+        application_id,
+        ngo["ngo_id"]
+    )).fetchone()
+
+    if application is None:
+        connection.close()
+        return redirect(url_for("ngo_dashboard"))
+
+    # --------------------------------------------------------
+    # UPDATE STATUS
+    # --------------------------------------------------------
+
+    connection.execute("""
+        UPDATE applications
+        SET status = ?
+        WHERE application_id = ?
+    """, (
+        new_status,
+        application_id
+    ))
+
+    connection.commit()
     connection.close()
 
-    return redirect(
-        url_for("ngo_dashboard")
-    )
+    return redirect(url_for("ngo_dashboard"))
 
 
 # ============================================================
