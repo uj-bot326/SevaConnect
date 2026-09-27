@@ -17,14 +17,18 @@ app.secret_key = os.environ.get(
     "sevaconnect-local-secret-key"
 )
 
-# Render provides this environment variable.
-# Locally, we use SQLite so the app works without connecting
-# to Render PostgreSQL from your Windows PC.
-DATABASE_URL = os.environ.get("postgresql://sevaconnect_db_user:B6ajchXzF0k6oeWd2riHesfa9rxBtkJI@dpg-dasenenpn0mc7383b6ng-a/sevaconnect_db")
+# IMPORTANT:
+# DATABASE_URL must be the NAME of the Render environment variable.
+#
+# Render:
+#   DATABASE_URL = your PostgreSQL Internal Database URL
+#
+# Local:
+#   DATABASE_URL can be absent and SQLite will be used.
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-# Detect whether the app is running on Render.
-# Render provides the RENDER environment variable.
-IS_RENDER = os.environ.get("RENDER") == "true"
+# Render normally provides RENDER=true.
+IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
 
 SQLITE_DATABASE = "database.db"
 
@@ -37,7 +41,9 @@ class DatabaseConnection:
 
     def __init__(self):
 
-        self.is_postgres = IS_RENDER and bool(DATABASE_URL)
+        # Use PostgreSQL whenever DATABASE_URL is available.
+        # Otherwise use local SQLite.
+        self.is_postgres = bool(DATABASE_URL)
 
         if self.is_postgres:
 
@@ -46,7 +52,7 @@ class DatabaseConnection:
 
             database_url = DATABASE_URL
 
-            # Support both postgres:// and postgresql://
+            # Support old postgres:// URLs.
             if database_url.startswith("postgres://"):
                 database_url = database_url.replace(
                     "postgres://",
@@ -70,7 +76,6 @@ class DatabaseConnection:
     def execute(self, query, params=()):
 
         if self.is_postgres:
-
             query = query.replace("?", "%s")
 
         return self.connection.cursor().execute(
@@ -89,7 +94,6 @@ class DatabaseConnection:
 
 
 def get_db_connection():
-
     return DatabaseConnection()
 
 
@@ -1440,33 +1444,41 @@ def ngo_dashboard():
     # GET NGO PROFILE
     # --------------------------------------------------------
 
-    ngo = connection.execute("""
-        SELECT *
-        FROM ngos
-        WHERE user_id = ?
-    """, (
-        session["user_id"],
-    )).fetchone()
+    ngo = get_ngo_for_user(
+        connection,
+        session["user_id"]
+    )
+
+    if ngo is None:
+
+        connection.close()
+
+        return redirect(
+            url_for("ngo_profile")
+        )
 
     # --------------------------------------------------------
     # GET OPPORTUNITIES CREATED BY THIS NGO
     # --------------------------------------------------------
 
-    opportunities = connection.execute("""
+    opportunities = connection.execute(
+        """
         SELECT *
         FROM opportunities
         WHERE ngo_id = ?
         ORDER BY opportunity_id DESC
-    """, (
-        ngo["ngo_id"] if ngo else -1,
-    )).fetchall()
+        """,
+        (
+            ngo["ngo_id"],
+        )
+    ).fetchall()
 
     # --------------------------------------------------------
     # GET ALL VOLUNTEERS WHO APPLIED
-    # TO THIS NGO'S OPPORTUNITIES
     # --------------------------------------------------------
 
-    applicants = connection.execute("""
+    applicants = connection.execute(
+        """
         SELECT
             applications.application_id,
             applications.status,
@@ -1496,14 +1508,17 @@ def ngo_dashboard():
             ON applications.user_id = volunteer_profiles.user_id
 
         INNER JOIN opportunities
-            ON applications.opportunity_id = opportunities.opportunity_id
+            ON applications.opportunity_id =
+               opportunities.opportunity_id
 
         WHERE opportunities.ngo_id = ?
 
         ORDER BY applications.applied_at DESC
-    """, (
-        ngo["ngo_id"] if ngo else -1,
-    )).fetchall()
+        """,
+        (
+            ngo["ngo_id"],
+        )
+    ).fetchall()
 
     # --------------------------------------------------------
     # APPLICATION COUNTS
@@ -1512,17 +1527,20 @@ def ngo_dashboard():
     total_applications = len(applicants)
 
     pending_applications = sum(
-        1 for applicant in applicants
+        1
+        for applicant in applicants
         if applicant["status"] == "Pending"
     )
 
     accepted_applications = sum(
-        1 for applicant in applicants
+        1
+        for applicant in applicants
         if applicant["status"] == "Accepted"
     )
 
     completed_applications = sum(
-        1 for applicant in applicants
+        1
+        for applicant in applicants
         if applicant["status"] == "Completed"
     )
 
@@ -1530,23 +1548,15 @@ def ngo_dashboard():
 
     return render_template(
         "ngo_dashboard.html",
-
         ngo=ngo,
-
         opportunities=opportunities,
-
         applicants=applicants,
-
         total_applications=total_applications,
-
         pending_applications=pending_applications,
-
         accepted_applications=accepted_applications,
-
         completed_applications=completed_applications
     )
-    
-    
+
 
 # ============================================================
 # UPDATE APPLICATION STATUS
@@ -1556,7 +1566,10 @@ def ngo_dashboard():
     "/ngo/application/<int:application_id>/<string:new_status>",
     methods=["POST"]
 )
-def update_application_status(application_id, new_status):
+def update_application_status(
+    application_id,
+    new_status
+):
 
     if "user_id" not in session:
         return redirect(url_for("login"))
@@ -1572,7 +1585,9 @@ def update_application_status(application_id, new_status):
     ]
 
     if new_status not in allowed_statuses:
-        return redirect(url_for("ngo_dashboard"))
+        return redirect(
+            url_for("ngo_dashboard")
+        )
 
     connection = get_db_connection()
 
@@ -1580,23 +1595,25 @@ def update_application_status(application_id, new_status):
     # GET NGO
     # --------------------------------------------------------
 
-    ngo = connection.execute("""
-        SELECT *
-        FROM ngos
-        WHERE user_id = ?
-    """, (
-        session["user_id"],
-    )).fetchone()
+    ngo = get_ngo_for_user(
+        connection,
+        session["user_id"]
+    )
 
     if ngo is None:
+
         connection.close()
-        return redirect(url_for("ngo_dashboard"))
+
+        return redirect(
+            url_for("ngo_dashboard")
+        )
 
     # --------------------------------------------------------
     # VERIFY APPLICATION BELONGS TO THIS NGO
     # --------------------------------------------------------
 
-    application = connection.execute("""
+    application = connection.execute(
+        """
         SELECT
             applications.application_id
         FROM applications
@@ -1607,32 +1624,43 @@ def update_application_status(application_id, new_status):
 
         WHERE applications.application_id = ?
         AND opportunities.ngo_id = ?
-    """, (
-        application_id,
-        ngo["ngo_id"]
-    )).fetchone()
+        """,
+        (
+            application_id,
+            ngo["ngo_id"]
+        )
+    ).fetchone()
 
     if application is None:
+
         connection.close()
-        return redirect(url_for("ngo_dashboard"))
+
+        return redirect(
+            url_for("ngo_dashboard")
+        )
 
     # --------------------------------------------------------
     # UPDATE STATUS
     # --------------------------------------------------------
 
-    connection.execute("""
+    connection.execute(
+        """
         UPDATE applications
         SET status = ?
         WHERE application_id = ?
-    """, (
-        new_status,
-        application_id
-    ))
+        """,
+        (
+            new_status,
+            application_id
+        )
+    )
 
     connection.commit()
     connection.close()
 
-    return redirect(url_for("ngo_dashboard"))
+    return redirect(
+        url_for("ngo_dashboard")
+    )
 
 
 # ============================================================
@@ -1659,16 +1687,10 @@ def initialize_application():
     print("SevaConnect starting...")
     print("----------------------------------------")
 
-    if IS_RENDER:
-
-        if not DATABASE_URL:
-
-            raise RuntimeError(
-                "DATABASE_URL is not configured on Render."
-            )
+    if DATABASE_URL:
 
         print(
-            "Database mode: PostgreSQL (Render)"
+            "Database mode: PostgreSQL"
         )
 
     else:
