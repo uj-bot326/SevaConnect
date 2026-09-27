@@ -1,13 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for, session
 import os
 import sqlite3
+from datetime import datetime
+
 import pandas as pd
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    flash
+)
 
 from matching import rank_opportunities
 
 
 # ============================================================
-# APP CONFIGURATION
+# FLASK CONFIGURATION
 # ============================================================
 
 app = Flask(__name__)
@@ -18,41 +31,40 @@ app.secret_key = os.environ.get(
 )
 
 # IMPORTANT:
-# DATABASE_URL must be the NAME of the Render environment variable.
+# This must be the NAME of the environment variable.
 #
 # Render:
-#   DATABASE_URL = your PostgreSQL Internal Database URL
+# DATABASE_URL = PostgreSQL Internal Database URL
 #
 # Local:
-#   DATABASE_URL can be absent and SQLite will be used.
-DATABASE_URL = os.environ.get("DATABASE_URL")
-
-# Render normally provides RENDER=true.
-IS_RENDER = os.environ.get("RENDER", "").lower() == "true"
+# DATABASE_URL can be absent and SQLite will be used.
+DATABASE_URL = os.environ.get("postgresql://sevaconnect_db_user:B6ajchXzF0k6oeWd2riHesfa9rxBtkJI@dpg-dasenenpn0mc7383b6ng-a/sevaconnect_db")
 
 SQLITE_DATABASE = "database.db"
 
+IS_RENDER = os.environ.get(
+    "RENDER",
+    ""
+).lower() == "true"
+
 
 # ============================================================
-# DATABASE CONNECTION WRAPPER
+# DATABASE CONNECTION CLASS
 # ============================================================
 
 class DatabaseConnection:
 
     def __init__(self):
 
-        # Use PostgreSQL whenever DATABASE_URL is available.
+        # PostgreSQL when DATABASE_URL exists.
         # Otherwise use local SQLite.
         self.is_postgres = bool(DATABASE_URL)
 
         if self.is_postgres:
 
-            import psycopg2
-            from psycopg2.extras import RealDictCursor
-
             database_url = DATABASE_URL
 
-            # Support old postgres:// URLs.
+            # Support old postgres:// URLs
             if database_url.startswith("postgres://"):
                 database_url = database_url.replace(
                     "postgres://",
@@ -61,9 +73,10 @@ class DatabaseConnection:
                 )
 
             self.connection = psycopg2.connect(
-                database_url,
-                cursor_factory=RealDictCursor
+                database_url
             )
+
+            self.connection.autocommit = False
 
         else:
 
@@ -76,29 +89,51 @@ class DatabaseConnection:
     def execute(self, query, params=()):
 
         if self.is_postgres:
-            query = query.replace("?", "%s")
 
-        return self.connection.cursor().execute(
-            query,
-            params
-        )
+            # Convert SQLite placeholders ? to PostgreSQL %s
+            query = query.replace(
+                "?",
+                "%s"
+            )
+
+            cursor = self.connection.cursor(
+                cursor_factory=RealDictCursor
+            )
+
+            cursor.execute(
+                query,
+                params
+            )
+
+            return cursor
+
+        else:
+
+            return self.connection.execute(
+                query,
+                params
+            )
 
     def commit(self):
+
         self.connection.commit()
 
     def rollback(self):
+
         self.connection.rollback()
 
     def close(self):
+
         self.connection.close()
 
 
 def get_db_connection():
+
     return DatabaseConnection()
 
 
 # ============================================================
-# CREATE DATABASE TABLES
+# DATABASE INITIALIZATION
 # ============================================================
 
 def init_database():
@@ -109,244 +144,233 @@ def init_database():
     # USERS
     # --------------------------------------------------------
 
-    if connection.is_postgres:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL
-            )
-        """)
-
-    else:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL
-            )
-        """)
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            user_id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
+        )
+        """
+        if connection.is_postgres
+        else
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            role TEXT NOT NULL
+        )
+        """
+    )
 
     # --------------------------------------------------------
     # VOLUNTEERS
     # --------------------------------------------------------
 
-    if connection.is_postgres:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS volunteers (
-                volunteer_id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                skills TEXT,
-                interests TEXT,
-                location TEXT,
-                availability TEXT,
-                experience TEXT,
-                preferred_mode TEXT,
-                hours_per_week INTEGER
-            )
-        """)
-
-    else:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS volunteers (
-                volunteer_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                skills TEXT,
-                interests TEXT,
-                location TEXT,
-                availability TEXT,
-                experience TEXT,
-                preferred_mode TEXT,
-                hours_per_week INTEGER
-            )
-        """)
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS volunteers (
+            volunteer_id SERIAL PRIMARY KEY,
+            skills TEXT,
+            interests TEXT,
+            location TEXT,
+            availability TEXT,
+            experience TEXT,
+            preferred_mode TEXT,
+            hours_per_week INTEGER
+        )
+        """
+        if connection.is_postgres
+        else
+        """
+        CREATE TABLE IF NOT EXISTS volunteers (
+            volunteer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            skills TEXT,
+            interests TEXT,
+            location TEXT,
+            availability TEXT,
+            experience TEXT,
+            preferred_mode TEXT,
+            hours_per_week INTEGER
+        )
+        """
+    )
 
     # --------------------------------------------------------
-    # NGOs
+    # NGOS
     # --------------------------------------------------------
 
-    if connection.is_postgres:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS ngos (
-                ngo_id SERIAL PRIMARY KEY,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                cause TEXT,
-                location TEXT,
-                description TEXT,
-                user_id INTEGER
-            )
-        """)
-
-    else:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS ngos (
-                ngo_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                cause TEXT,
-                location TEXT,
-                description TEXT,
-                user_id INTEGER
-            )
-        """)
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ngos (
+            ngo_id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            cause TEXT,
+            location TEXT,
+            description TEXT
+        )
+        """
+        if connection.is_postgres
+        else
+        """
+        CREATE TABLE IF NOT EXISTS ngos (
+            ngo_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            cause TEXT,
+            location TEXT,
+            description TEXT
+        )
+        """
+    )
 
     # --------------------------------------------------------
     # VOLUNTEER PROFILES
     # --------------------------------------------------------
 
-    if connection.is_postgres:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS volunteer_profiles (
-                profile_id SERIAL PRIMARY KEY,
-                user_id INTEGER UNIQUE NOT NULL,
-                skills TEXT,
-                interests TEXT,
-                location TEXT,
-                availability TEXT,
-                experience TEXT,
-                preferred_mode TEXT,
-                hours_per_week INTEGER
-            )
-        """)
-
-    else:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS volunteer_profiles (
-                profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER UNIQUE NOT NULL,
-                skills TEXT,
-                interests TEXT,
-                location TEXT,
-                availability TEXT,
-                experience TEXT,
-                preferred_mode TEXT,
-                hours_per_week INTEGER
-            )
-        """)
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS volunteer_profiles (
+            profile_id SERIAL PRIMARY KEY,
+            user_id INTEGER UNIQUE,
+            skills TEXT,
+            interests TEXT,
+            location TEXT,
+            availability TEXT,
+            experience TEXT,
+            preferred_mode TEXT,
+            hours_per_week INTEGER
+        )
+        """
+        if connection.is_postgres
+        else
+        """
+        CREATE TABLE IF NOT EXISTS volunteer_profiles (
+            profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE,
+            skills TEXT,
+            interests TEXT,
+            location TEXT,
+            availability TEXT,
+            experience TEXT,
+            preferred_mode TEXT,
+            hours_per_week INTEGER
+        )
+        """
+    )
 
     # --------------------------------------------------------
     # OPPORTUNITIES
     # --------------------------------------------------------
 
-    if connection.is_postgres:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS opportunities (
-                opportunity_id SERIAL PRIMARY KEY,
-                ngo_id INTEGER,
-                title TEXT NOT NULL,
-                description TEXT,
-                cause TEXT,
-                required_skills TEXT,
-                location TEXT,
-                availability TEXT,
-                hours_required INTEGER,
-                mode TEXT,
-                experience_required TEXT
-            )
-        """)
-
-    else:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS opportunities (
-                opportunity_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ngo_id INTEGER,
-                title TEXT NOT NULL,
-                description TEXT,
-                cause TEXT,
-                required_skills TEXT,
-                location TEXT,
-                availability TEXT,
-                hours_required INTEGER,
-                mode TEXT,
-                experience_required TEXT
-            )
-        """)
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS opportunities (
+            opportunity_id SERIAL PRIMARY KEY,
+            ngo_id INTEGER,
+            title TEXT,
+            description TEXT,
+            cause TEXT,
+            required_skills TEXT,
+            location TEXT,
+            availability TEXT,
+            hours_required INTEGER,
+            mode TEXT,
+            experience_required TEXT
+        )
+        """
+        if connection.is_postgres
+        else
+        """
+        CREATE TABLE IF NOT EXISTS opportunities (
+            opportunity_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ngo_id INTEGER,
+            title TEXT,
+            description TEXT,
+            cause TEXT,
+            required_skills TEXT,
+            location TEXT,
+            availability TEXT,
+            hours_required INTEGER,
+            mode TEXT,
+            experience_required TEXT
+        )
+        """
+    )
 
     # --------------------------------------------------------
     # APPLICATIONS
     # --------------------------------------------------------
 
-    if connection.is_postgres:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS applications (
-                application_id SERIAL PRIMARY KEY,
-                user_id INTEGER NOT NULL,
-                opportunity_id INTEGER NOT NULL,
-                status TEXT DEFAULT 'Pending',
-                applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, opportunity_id)
-            )
-        """)
-
-    else:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS applications (
-                application_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                opportunity_id INTEGER NOT NULL,
-                status TEXT DEFAULT 'Pending',
-                applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, opportunity_id)
-            )
-        """)
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS applications (
+            application_id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            opportunity_id INTEGER,
+            status TEXT DEFAULT 'Pending',
+            applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        if connection.is_postgres
+        else
+        """
+        CREATE TABLE IF NOT EXISTS applications (
+            application_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            opportunity_id INTEGER,
+            status TEXT DEFAULT 'Pending',
+            applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
 
     # --------------------------------------------------------
     # FEEDBACK
     # --------------------------------------------------------
 
-    if connection.is_postgres:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS feedback (
-                feedback_id SERIAL PRIMARY KEY,
-                volunteer_id INTEGER,
-                opportunity_id INTEGER,
-                rating INTEGER,
-                comments TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-
-    else:
-
-        connection.execute("""
-            CREATE TABLE IF NOT EXISTS feedback (
-                feedback_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                volunteer_id INTEGER,
-                opportunity_id INTEGER,
-                rating INTEGER,
-                comments TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS feedback (
+            feedback_id SERIAL PRIMARY KEY,
+            user_id INTEGER,
+            opportunity_id INTEGER,
+            rating INTEGER,
+            comments TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        if connection.is_postgres
+        else
+        """
+        CREATE TABLE IF NOT EXISTS feedback (
+            feedback_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            opportunity_id INTEGER,
+            rating INTEGER,
+            comments TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
 
     connection.commit()
     connection.close()
 
-    print("Database tables initialized successfully.")
+    print(
+        "Database tables initialized successfully."
+    )
 
 
 # ============================================================
-# LOAD CSV DATA
+# CSV DATA LOADING
 # ============================================================
 
 def load_csv_data():
@@ -355,196 +379,251 @@ def load_csv_data():
 
     try:
 
-        volunteers = pd.read_csv(
-            "volunteers_100.csv"
-        )
+        # ----------------------------------------------------
+        # LOAD VOLUNTEERS
+        # ----------------------------------------------------
 
-        ngos = pd.read_csv(
-            "ngos_30.csv"
-        )
+        if os.path.exists("volunteers_100.csv"):
 
-        opportunities = pd.read_csv(
-            "opportunities_100.csv"
-        )
+            existing = connection.execute(
+                "SELECT COUNT(*) AS count FROM volunteers"
+            ).fetchone()
 
-    except FileNotFoundError:
+            count = (
+                existing["count"]
+                if existing
+                else 0
+            )
+
+            if count == 0:
+
+                df = pd.read_csv(
+                    "volunteers_100.csv"
+                )
+
+                for _, row in df.iterrows():
+
+                    connection.execute(
+                        """
+                        INSERT INTO volunteers
+                        (
+                            skills,
+                            interests,
+                            location,
+                            availability,
+                            experience,
+                            preferred_mode,
+                            hours_per_week
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            str(row.get("skills", "")),
+                            str(row.get("interests", "")),
+                            str(row.get("location", "")),
+                            str(row.get("availability", "")),
+                            str(row.get("experience", "")),
+                            str(row.get("preferred_mode", "")),
+                            int(row.get("hours_per_week", 0))
+                        )
+                    )
+
+        # ----------------------------------------------------
+        # LOAD NGOS
+        # ----------------------------------------------------
+
+        if os.path.exists("ngos_30.csv"):
+
+            existing = connection.execute(
+                "SELECT COUNT(*) AS count FROM ngos"
+            ).fetchone()
+
+            count = (
+                existing["count"]
+                if existing
+                else 0
+            )
+
+            if count == 0:
+
+                df = pd.read_csv(
+                    "ngos_30.csv"
+                )
+
+                for _, row in df.iterrows():
+
+                    connection.execute(
+                        """
+                        INSERT INTO ngos
+                        (
+                            name,
+                            email,
+                            cause,
+                            location,
+                            description
+                        )
+                        VALUES (?, ?, ?, ?, ?)
+                        """,
+                        (
+                            str(row.get("ngo_name", row.get("name", ""))),
+                            str(row.get("email", "")),
+                            str(row.get("cause", "")),
+                            str(row.get("location", "")),
+                            str(row.get("description", ""))
+                        )
+                    )
+
+        # ----------------------------------------------------
+        # LOAD OPPORTUNITIES
+        # ----------------------------------------------------
+
+        if os.path.exists("opportunities_100.csv"):
+
+            existing = connection.execute(
+                "SELECT COUNT(*) AS count FROM opportunities"
+            ).fetchone()
+
+            count = (
+                existing["count"]
+                if existing
+                else 0
+            )
+
+            if count == 0:
+
+                df = pd.read_csv(
+                    "opportunities_100.csv"
+                )
+
+                for _, row in df.iterrows():
+
+                    connection.execute(
+                        """
+                        INSERT INTO opportunities
+                        (
+                            ngo_id,
+                            title,
+                            description,
+                            cause,
+                            required_skills,
+                            location,
+                            availability,
+                            hours_required,
+                            mode,
+                            experience_required
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            row.get("ngo_id"),
+                            str(row.get("opportunity_title", row.get("title", ""))),
+                            str(row.get("description", "")),
+                            str(row.get("cause", "")),
+                            str(row.get("required_skills", "")),
+                            str(row.get("location", "")),
+                            str(row.get("availability", "")),
+                            int(row.get("hours_required", 0)),
+                            str(row.get("mode", "")),
+                            str(row.get("experience_required", ""))
+                        )
+                    )
+
+        connection.commit()
 
         print(
-            "CSV files not found. "
-            "Skipping synthetic data loading."
+            "CSV data loaded successfully."
         )
+
+    except Exception as error:
+
+        connection.rollback()
+
+        print(
+            "CSV loading skipped/error:",
+            error
+        )
+
+    finally:
 
         connection.close()
 
-        return
+
+# ============================================================
+# NGO HELPER
+# ============================================================
+
+def get_ngo_for_user(
+    connection,
+    user_id
+):
+
+    ngo = connection.execute(
+        """
+        SELECT *
+        FROM ngos
+        WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchone()
+
+    if ngo:
+        return ngo
 
     # --------------------------------------------------------
-    # INSERT NGOs
+    # Try matching NGO with logged-in user's email
     # --------------------------------------------------------
 
-    for _, row in ngos.iterrows():
+    user = connection.execute(
+        """
+        SELECT *
+        FROM users
+        WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchone()
 
-        email = (
-            f"{row['ngo_id']}@synthetic.sevaconnect"
-        )
+    if not user:
+        return None
 
-        existing = connection.execute(
+    ngo = connection.execute(
+        """
+        SELECT *
+        FROM ngos
+        WHERE LOWER(email) = LOWER(?)
+        """,
+        (user["email"],)
+    ).fetchone()
+
+    if ngo:
+
+        connection.execute(
             """
-            SELECT ngo_id
-            FROM ngos
-            WHERE email = ?
-            """,
-            (email,)
-        ).fetchone()
-
-        if existing is None:
-
-            connection.execute(
-                """
-                INSERT INTO ngos
-                (
-                    name,
-                    email,
-                    cause,
-                    location,
-                    description
-                )
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (
-                    row["ngo_name"],
-                    email,
-                    row["cause"],
-                    row["location"],
-                    "Synthetic NGO record for SevaConnect prototype."
-                )
-            )
-
-    # --------------------------------------------------------
-    # INSERT VOLUNTEERS
-    # --------------------------------------------------------
-
-    for _, row in volunteers.iterrows():
-
-        email = (
-            f"{row['volunteer_id']}@synthetic.sevaconnect"
-        )
-
-        existing = connection.execute(
-            """
-            SELECT volunteer_id
-            FROM volunteers
-            WHERE email = ?
-            """,
-            (email,)
-        ).fetchone()
-
-        if existing is None:
-
-            connection.execute(
-                """
-                INSERT INTO volunteers
-                (
-                    name,
-                    email,
-                    skills,
-                    interests,
-                    location,
-                    availability,
-                    experience,
-                    preferred_mode,
-                    hours_per_week
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    row["volunteer_id"],
-                    email,
-                    row["skills"],
-                    row["interests"],
-                    row["location"],
-                    row["availability"],
-                    row["experience"],
-                    row["preferred_mode"],
-                    int(row["hours_per_week"])
-                )
-            )
-
-    # --------------------------------------------------------
-    # INSERT OPPORTUNITIES
-    # --------------------------------------------------------
-
-    for _, row in opportunities.iterrows():
-
-        ngo = connection.execute(
-            """
-            SELECT ngo_id
-            FROM ngos
-            WHERE name = ?
-            """,
-            (row["ngo_name"],)
-        ).fetchone()
-
-        if ngo is None:
-            continue
-
-        existing = connection.execute(
-            """
-            SELECT opportunity_id
-            FROM opportunities
-            WHERE title = ?
-            AND ngo_id = ?
+            UPDATE ngos
+            SET user_id = ?
+            WHERE ngo_id = ?
             """,
             (
-                row["opportunity_title"],
+                user_id,
                 ngo["ngo_id"]
             )
+        )
+
+        connection.commit()
+
+        return connection.execute(
+            """
+            SELECT *
+            FROM ngos
+            WHERE ngo_id = ?
+            """,
+            (ngo["ngo_id"],)
         ).fetchone()
 
-        if existing is None:
-
-            connection.execute(
-                """
-                INSERT INTO opportunities
-                (
-                    ngo_id,
-                    title,
-                    description,
-                    cause,
-                    required_skills,
-                    location,
-                    availability,
-                    hours_required,
-                    mode,
-                    experience_required
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    ngo["ngo_id"],
-                    row["opportunity_title"],
-                    (
-                        f"{row['opportunity_title']} "
-                        f"offered by {row['ngo_name']}."
-                    ),
-                    row["cause"],
-                    row["required_skills"],
-                    row["location"],
-                    row["availability"],
-                    int(row["hours_required"]),
-                    row["mode"],
-                    row["experience_required"]
-                )
-            )
-
-    connection.commit()
-    connection.close()
-
-    print("CSV data loaded successfully.")
+    return None
 
 
 # ============================================================
-# HOME
+# HOME PAGE
 # ============================================================
 
 @app.route("/")
@@ -567,10 +646,47 @@ def register():
 
     if request.method == "POST":
 
-        name = request.form["name"]
-        email = request.form["email"]
-        password = request.form["password"]
-        role = request.form["role"]
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
+        email = request.form.get(
+            "email",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        role = request.form.get(
+            "role",
+            ""
+        ).strip().lower()
+
+        if not name or not email or not password:
+
+            flash(
+                "Please fill all required fields.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        if role not in ["volunteer", "ngo"]:
+
+            flash(
+                "Invalid role selected.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
 
         connection = get_db_connection()
 
@@ -597,23 +713,31 @@ def register():
 
             connection.commit()
 
+            flash(
+                "Registration successful. Please login.",
+                "success"
+            )
+
+            return redirect(
+                url_for("login")
+            )
+
         except Exception:
 
             connection.rollback()
+
+            flash(
+                "Email already exists or registration failed.",
+                "error"
+            )
+
+            return redirect(
+                url_for("register")
+            )
+
+        finally:
+
             connection.close()
-
-            return """
-                <h2>Email already registered.</h2>
-                <a href="/register">
-                    Try again
-                </a>
-            """
-
-        connection.close()
-
-        return redirect(
-            url_for("login")
-        )
 
     return render_template(
         "register.html"
@@ -632,8 +756,15 @@ def login():
 
     if request.method == "POST":
 
-        email = request.form["email"]
-        password = request.form["password"]
+        email = request.form.get(
+            "email",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
 
         connection = get_db_connection()
 
@@ -641,7 +772,7 @@ def login():
             """
             SELECT *
             FROM users
-            WHERE email = ?
+            WHERE LOWER(email) = LOWER(?)
             AND password = ?
             """,
             (
@@ -652,17 +783,20 @@ def login():
 
         connection.close()
 
-        if user is None:
+        if not user:
 
-            return """
-                <h2>Invalid email or password.</h2>
-                <a href="/login">
-                    Try again
-                </a>
-            """
+            flash(
+                "Invalid email or password.",
+                "error"
+            )
+
+            return redirect(
+                url_for("login")
+            )
 
         session["user_id"] = user["user_id"]
         session["name"] = user["name"]
+        session["email"] = user["email"]
         session["role"] = user["role"]
 
         if user["role"] == "volunteer":
@@ -671,11 +805,9 @@ def login():
                 url_for("volunteer_dashboard")
             )
 
-        if user["role"] == "ngo":
-
-            return redirect(
-                url_for("ngo_dashboard")
-            )
+        return redirect(
+            url_for("ngo_dashboard")
+        )
 
     return render_template(
         "login.html"
@@ -693,23 +825,67 @@ def login():
 def volunteer_profile():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     if session.get("role") != "volunteer":
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     connection = get_db_connection()
 
     if request.method == "POST":
 
-        name = request.form["name"]
-        skills = request.form["skills"]
-        interests = request.form["interests"]
-        location = request.form["location"]
-        availability = request.form["availability"]
-        experience = request.form["experience"]
-        preferred_mode = request.form["preferred_mode"]
-        hours_per_week = request.form["hours_per_week"]
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
+        skills = request.form.get(
+            "skills",
+            ""
+        ).strip()
+
+        interests = request.form.get(
+            "interests",
+            ""
+        ).strip()
+
+        location = request.form.get(
+            "location",
+            ""
+        ).strip()
+
+        availability = request.form.get(
+            "availability",
+            ""
+        ).strip()
+
+        experience = request.form.get(
+            "experience",
+            ""
+        ).strip()
+
+        preferred_mode = request.form.get(
+            "preferred_mode",
+            ""
+        ).strip()
+
+        hours_per_week = request.form.get(
+            "hours_per_week",
+            "0"
+        ).strip()
+
+        try:
+            hours_per_week = int(
+                hours_per_week
+            )
+        except:
+            hours_per_week = 0
 
         connection.execute(
             """
@@ -725,7 +901,7 @@ def volunteer_profile():
 
         existing = connection.execute(
             """
-            SELECT profile_id
+            SELECT *
             FROM volunteer_profiles
             WHERE user_id = ?
             """,
@@ -791,9 +967,15 @@ def volunteer_profile():
             )
 
         connection.commit()
-        connection.close()
 
         session["name"] = name
+
+        flash(
+            "Profile saved successfully.",
+            "success"
+        )
+
+        connection.close()
 
         return redirect(
             url_for("volunteer_dashboard")
@@ -810,11 +992,23 @@ def volunteer_profile():
         )
     ).fetchone()
 
+    user = connection.execute(
+        """
+        SELECT *
+        FROM users
+        WHERE user_id = ?
+        """,
+        (
+            session["user_id"],
+        )
+    ).fetchone()
+
     connection.close()
 
     return render_template(
         "volunteer_profile.html",
-        profile=profile
+        profile=profile,
+        user=user
     )
 
 
@@ -826,23 +1020,18 @@ def volunteer_profile():
 def volunteer_dashboard():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     if session.get("role") != "volunteer":
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     connection = get_db_connection()
-
-    user = connection.execute(
-        """
-        SELECT *
-        FROM users
-        WHERE user_id = ?
-        """,
-        (
-            session["user_id"],
-        )
-    ).fetchone()
 
     profile = connection.execute(
         """
@@ -855,98 +1044,41 @@ def volunteer_dashboard():
         )
     ).fetchone()
 
-    opportunity_rows = connection.execute(
+    opportunities = connection.execute(
         """
-        SELECT
-            opportunities.*,
-            ngos.name AS ngo_name
+        SELECT *
         FROM opportunities
-        LEFT JOIN ngos
-            ON opportunities.ngo_id = ngos.ngo_id
+        ORDER BY opportunity_id DESC
         """
     ).fetchall()
 
     applications = connection.execute(
         """
         SELECT
-            applications.application_id,
-            applications.opportunity_id,
-            applications.status,
-            applications.applied_at,
-            opportunities.title,
+            applications.*,
+            opportunities.title AS opportunity_title,
             opportunities.cause,
-            ngos.name AS ngo_name
+            opportunities.location,
+            opportunities.mode
         FROM applications
-        JOIN opportunities
+
+        INNER JOIN opportunities
             ON applications.opportunity_id =
                opportunities.opportunity_id
-        LEFT JOIN ngos
-            ON opportunities.ngo_id = ngos.ngo_id
+
         WHERE applications.user_id = ?
-        ORDER BY applications.applied_at DESC
+
+        ORDER BY applications.application_id DESC
         """,
         (
             session["user_id"],
         )
     ).fetchall()
 
-    completed = connection.execute(
-        """
-        SELECT COUNT(*) AS total
-        FROM applications
-        WHERE user_id = ?
-        AND status = 'Completed'
-        """,
-        (
-            session["user_id"],
-        )
-    ).fetchone()
-
-    connection.close()
-
-    # --------------------------------------------------------
-    # BUILD VOLUNTEER OBJECT
-    # --------------------------------------------------------
-
-    volunteer = None
-
-    if user and profile:
-
-        volunteer = {
-            "name": user["name"],
-            "skills": profile["skills"] or "",
-            "interests": profile["interests"] or "",
-            "location": profile["location"] or "",
-            "availability": profile["availability"] or "",
-            "experience": profile["experience"] or "beginner",
-            "preferred_mode": profile["preferred_mode"] or "offline",
-            "hours_per_week": profile["hours_per_week"] or 0
-        }
-
-    # --------------------------------------------------------
-    # BUILD OPPORTUNITIES
-    # --------------------------------------------------------
-
-    opportunity_list = []
-
-    for row in opportunity_rows:
-
-        opportunity_list.append(
-            {
-                "opportunity_id": row["opportunity_id"],
-                "ngo_id": row["ngo_id"],
-                "ngo_name": row["ngo_name"] or "Organization",
-                "cause": row["cause"] or "",
-                "opportunity_title": row["title"],
-                "required_skills": row["required_skills"] or "",
-                "location": row["location"] or "",
-                "availability": row["availability"] or "",
-                "hours_required": row["hours_required"] or 0,
-                "mode": row["mode"] or "offline",
-                "experience_required":
-                    row["experience_required"] or "beginner"
-            }
-        )
+    applied_ids = set(
+        application["opportunity_id"]
+        for application in applications
+    )
 
     # --------------------------------------------------------
     # RECOMMENDATIONS
@@ -954,21 +1086,50 @@ def volunteer_dashboard():
 
     recommendations = []
 
-    if volunteer and opportunity_list:
+    if profile:
 
-        recommendations = rank_opportunities(
-            volunteer,
-            opportunity_list,
-            top_n=5
-        )
+        volunteer_data = {
+            "skills": profile["skills"] or "",
+            "interests": profile["interests"] or "",
+            "location": profile["location"] or "",
+            "availability": profile["availability"] or "",
+            "experience": profile["experience"] or "",
+            "preferred_mode": profile["preferred_mode"] or ""
+        }
+
+        try:
+
+            recommendations = rank_opportunities(
+                volunteer_data,
+                opportunities
+            )
+
+        except Exception as error:
+
+            print(
+                "Recommendation error:",
+                error
+            )
+
+            recommendations = []
+
+    if not recommendations:
+
+        recommendations = list(
+            opportunities
+        )[:5]
+
+    recommendations = recommendations[:5]
+
+    connection.close()
 
     return render_template(
         "volunteer_dashboard.html",
+        profile=profile,
+        opportunities=opportunities,
         recommendations=recommendations,
         applications=applications,
-        profile=profile,
-        volunteer=volunteer,
-        completed_activities=completed["total"]
+        applied_ids=applied_ids
     )
 
 
@@ -980,19 +1141,27 @@ def volunteer_dashboard():
     "/apply/<int:opportunity_id>",
     methods=["POST"]
 )
-def apply_opportunity(opportunity_id):
+def apply_opportunity(
+    opportunity_id
+):
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     if session.get("role") != "volunteer":
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     connection = get_db_connection()
 
     opportunity = connection.execute(
         """
-        SELECT opportunity_id
+        SELECT *
         FROM opportunities
         WHERE opportunity_id = ?
         """,
@@ -1001,20 +1170,22 @@ def apply_opportunity(opportunity_id):
         )
     ).fetchone()
 
-    if opportunity is None:
+    if not opportunity:
 
         connection.close()
 
-        return """
-            <h2>Opportunity not found.</h2>
-            <a href="/volunteer-dashboard">
-                Back to Dashboard
-            </a>
-        """
+        flash(
+            "Opportunity not found.",
+            "error"
+        )
+
+        return redirect(
+            url_for("volunteer_dashboard")
+        )
 
     existing = connection.execute(
         """
-        SELECT application_id
+        SELECT *
         FROM applications
         WHERE user_id = ?
         AND opportunity_id = ?
@@ -1028,6 +1199,11 @@ def apply_opportunity(opportunity_id):
     if existing:
 
         connection.close()
+
+        flash(
+            "You have already applied for this opportunity.",
+            "info"
+        )
 
         return redirect(
             url_for("volunteer_dashboard")
@@ -1052,86 +1228,14 @@ def apply_opportunity(opportunity_id):
     connection.commit()
     connection.close()
 
+    flash(
+        "Application submitted successfully.",
+        "success"
+    )
+
     return redirect(
         url_for("volunteer_dashboard")
     )
-
-
-# ============================================================
-# NGO PROFILE HELPER
-# ============================================================
-
-def get_ngo_for_user(connection, user_id):
-
-    ngo = connection.execute(
-        """
-        SELECT *
-        FROM ngos
-        WHERE user_id = ?
-        LIMIT 1
-        """,
-        (
-            user_id,
-        )
-    ).fetchone()
-
-    if ngo:
-        return ngo
-
-    user = connection.execute(
-        """
-        SELECT *
-        FROM users
-        WHERE user_id = ?
-        """,
-        (
-            user_id,
-        )
-    ).fetchone()
-
-    if not user:
-        return None
-
-    ngo = connection.execute(
-        """
-        SELECT *
-        FROM ngos
-        WHERE email = ?
-        LIMIT 1
-        """,
-        (
-            user["email"],
-        )
-    ).fetchone()
-
-    if ngo:
-
-        connection.execute(
-            """
-            UPDATE ngos
-            SET user_id = ?
-            WHERE ngo_id = ?
-            """,
-            (
-                user_id,
-                ngo["ngo_id"]
-            )
-        )
-
-        connection.commit()
-
-        return connection.execute(
-            """
-            SELECT *
-            FROM ngos
-            WHERE ngo_id = ?
-            """,
-            (
-                ngo["ngo_id"],
-            )
-        ).fetchone()
-
-    return None
 
 
 # ============================================================
@@ -1145,113 +1249,156 @@ def get_ngo_for_user(connection, user_id):
 def ngo_profile():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     if session.get("role") != "ngo":
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     connection = get_db_connection()
 
-    user = connection.execute(
-        """
-        SELECT *
-        FROM users
-        WHERE user_id = ?
-        """,
-        (
-            session["user_id"],
+    if request.method == "POST":
+
+        name = request.form.get(
+            "name",
+            ""
+        ).strip()
+
+        email = request.form.get(
+            "email",
+            ""
+        ).strip()
+
+        cause = request.form.get(
+            "cause",
+            ""
+        ).strip()
+
+        location = request.form.get(
+            "location",
+            ""
+        ).strip()
+
+        description = request.form.get(
+            "description",
+            ""
+        ).strip()
+
+        existing = get_ngo_for_user(
+            connection,
+            session["user_id"]
         )
-    ).fetchone()
+
+        try:
+
+            if existing:
+
+                connection.execute(
+                    """
+                    UPDATE ngos
+                    SET
+                        name = ?,
+                        email = ?,
+                        cause = ?,
+                        location = ?,
+                        description = ?
+                    WHERE ngo_id = ?
+                    """,
+                    (
+                        name,
+                        email,
+                        cause,
+                        location,
+                        description,
+                        existing["ngo_id"]
+                    )
+                )
+
+            else:
+
+                connection.execute(
+                    """
+                    INSERT INTO ngos
+                    (
+                        user_id,
+                        name,
+                        email,
+                        cause,
+                        location,
+                        description
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        session["user_id"],
+                        name,
+                        email,
+                        cause,
+                        location,
+                        description
+                    )
+                )
+
+            connection.execute(
+                """
+                UPDATE users
+                SET
+                    name = ?,
+                    email = ?
+                WHERE user_id = ?
+                """,
+                (
+                    name,
+                    email,
+                    session["user_id"]
+                )
+            )
+
+            connection.commit()
+
+            session["name"] = name
+            session["email"] = email
+
+            flash(
+                "NGO profile saved successfully.",
+                "success"
+            )
+
+            connection.close()
+
+            return redirect(
+                url_for("ngo_dashboard")
+            )
+
+        except Exception as error:
+
+            connection.rollback()
+
+            print(
+                "NGO profile error:",
+                error
+            )
+
+            flash(
+                "Could not save NGO profile. Check the email.",
+                "error"
+            )
 
     ngo = get_ngo_for_user(
         connection,
         session["user_id"]
     )
 
-    if request.method == "POST":
-
-        name = request.form["name"]
-        email = request.form["email"]
-        cause = request.form["cause"]
-        location = request.form["location"]
-        description = request.form["description"]
-
-        if ngo:
-
-            connection.execute(
-                """
-                UPDATE ngos
-                SET
-                    name = ?,
-                    email = ?,
-                    cause = ?,
-                    location = ?,
-                    description = ?
-                WHERE ngo_id = ?
-                """,
-                (
-                    name,
-                    email,
-                    cause,
-                    location,
-                    description,
-                    ngo["ngo_id"]
-                )
-            )
-
-        else:
-
-            connection.execute(
-                """
-                INSERT INTO ngos
-                (
-                    name,
-                    email,
-                    cause,
-                    location,
-                    description,
-                    user_id
-                )
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    name,
-                    email,
-                    cause,
-                    location,
-                    description,
-                    session["user_id"]
-                )
-            )
-
-        connection.execute(
-            """
-            UPDATE users
-            SET name = ?, email = ?
-            WHERE user_id = ?
-            """,
-            (
-                name,
-                email,
-                session["user_id"]
-            )
-        )
-
-        connection.commit()
-        connection.close()
-
-        session["name"] = name
-
-        return redirect(
-            url_for("ngo_dashboard")
-        )
-
     connection.close()
 
     return render_template(
         "ngo_profile.html",
-        ngo=ngo,
-        user=user
+        ngo=ngo
     )
 
 
@@ -1266,10 +1413,16 @@ def ngo_profile():
 def create_opportunity():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     if session.get("role") != "ngo":
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     connection = get_db_connection()
 
@@ -1282,23 +1435,71 @@ def create_opportunity():
 
         connection.close()
 
+        flash(
+            "Please complete your NGO profile first.",
+            "error"
+        )
+
         return redirect(
             url_for("ngo_profile")
         )
 
     if request.method == "POST":
 
-        title = request.form["title"]
-        description = request.form["description"]
-        cause = request.form["cause"]
-        required_skills = request.form["required_skills"]
-        location = request.form["location"]
-        availability = request.form["availability"]
-        hours_required = request.form["hours_required"]
-        mode = request.form["mode"]
-        experience_required = request.form[
-            "experience_required"
-        ]
+        title = request.form.get(
+            "title",
+            ""
+        ).strip()
+
+        description = request.form.get(
+            "description",
+            ""
+        ).strip()
+
+        cause = request.form.get(
+            "cause",
+            ""
+        ).strip()
+
+        required_skills = request.form.get(
+            "required_skills",
+            ""
+        ).strip()
+
+        location = request.form.get(
+            "location",
+            ""
+        ).strip()
+
+        availability = request.form.get(
+            "availability",
+            ""
+        ).strip()
+
+        hours_required = request.form.get(
+            "hours_required",
+            "0"
+        ).strip()
+
+        mode = request.form.get(
+            "mode",
+            ""
+        ).strip()
+
+        experience_required = request.form.get(
+            "experience_required",
+            ""
+        ).strip()
+
+        try:
+
+            hours_required = int(
+                hours_required
+            )
+
+        except:
+
+            hours_required = 0
 
         connection.execute(
             """
@@ -1334,6 +1535,11 @@ def create_opportunity():
         connection.commit()
         connection.close()
 
+        flash(
+            "Opportunity created successfully.",
+            "success"
+        )
+
         return redirect(
             url_for("ngo_dashboard")
         )
@@ -1341,8 +1547,7 @@ def create_opportunity():
     connection.close()
 
     return render_template(
-        "create_opportunity.html",
-        ngo=ngo
+        "create_opportunity.html"
     )
 
 
@@ -1354,13 +1559,21 @@ def create_opportunity():
     "/delete-opportunity/<int:opportunity_id>",
     methods=["POST"]
 )
-def delete_opportunity(opportunity_id):
+def delete_opportunity(
+    opportunity_id
+):
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     if session.get("role") != "ngo":
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     connection = get_db_connection()
 
@@ -1369,56 +1582,67 @@ def delete_opportunity(opportunity_id):
         session["user_id"]
     )
 
-    if ngo:
+    if ngo is None:
 
-        opportunity = connection.execute(
+        connection.close()
+
+        return redirect(
+            url_for("ngo_dashboard")
+        )
+
+    opportunity = connection.execute(
+        """
+        SELECT *
+        FROM opportunities
+        WHERE opportunity_id = ?
+        AND ngo_id = ?
+        """,
+        (
+            opportunity_id,
+            ngo["ngo_id"]
+        )
+    ).fetchone()
+
+    if opportunity:
+
+        connection.execute(
             """
-            SELECT opportunity_id
-            FROM opportunities
+            DELETE FROM applications
             WHERE opportunity_id = ?
-            AND ngo_id = ?
             """,
             (
                 opportunity_id,
-                ngo["ngo_id"]
             )
-        ).fetchone()
+        )
 
-        if opportunity:
-
-            connection.execute(
-                """
-                DELETE FROM applications
-                WHERE opportunity_id = ?
-                """,
-                (
-                    opportunity_id,
-                )
+        connection.execute(
+            """
+            DELETE FROM feedback
+            WHERE opportunity_id = ?
+            """,
+            (
+                opportunity_id,
             )
+        )
 
-            connection.execute(
-                """
-                DELETE FROM feedback
-                WHERE opportunity_id = ?
-                """,
-                (
-                    opportunity_id,
-                )
+        connection.execute(
+            """
+            DELETE FROM opportunities
+            WHERE opportunity_id = ?
+            """,
+            (
+                opportunity_id,
             )
+        )
 
-            connection.execute(
-                """
-                DELETE FROM opportunities
-                WHERE opportunity_id = ?
-                """,
-                (
-                    opportunity_id,
-                )
-            )
-
-            connection.commit()
+        connection.commit()
 
     connection.close()
+
+    flash(
+        "Opportunity deleted.",
+        "success"
+    )
 
     return redirect(
         url_for("ngo_dashboard")
@@ -1433,10 +1657,16 @@ def delete_opportunity(opportunity_id):
 def ngo_dashboard():
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     if session.get("role") != "ngo":
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     connection = get_db_connection()
 
@@ -1475,11 +1705,13 @@ def ngo_dashboard():
 
     # --------------------------------------------------------
     # GET ALL VOLUNTEERS WHO APPLIED
+    # TO THIS NGO'S OPPORTUNITIES
     # --------------------------------------------------------
 
     applicants = connection.execute(
         """
         SELECT
+
             applications.application_id,
             applications.status,
             applications.applied_at,
@@ -1502,10 +1734,12 @@ def ngo_dashboard():
         FROM applications
 
         INNER JOIN users
-            ON applications.user_id = users.user_id
+            ON applications.user_id =
+               users.user_id
 
         LEFT JOIN volunteer_profiles
-            ON applications.user_id = volunteer_profiles.user_id
+            ON applications.user_id =
+               volunteer_profiles.user_id
 
         INNER JOIN opportunities
             ON applications.opportunity_id =
@@ -1524,7 +1758,9 @@ def ngo_dashboard():
     # APPLICATION COUNTS
     # --------------------------------------------------------
 
-    total_applications = len(applicants)
+    total_applications = len(
+        applicants
+    )
 
     pending_applications = sum(
         1
@@ -1548,12 +1784,19 @@ def ngo_dashboard():
 
     return render_template(
         "ngo_dashboard.html",
+
         ngo=ngo,
+
         opportunities=opportunities,
+
         applicants=applicants,
+
         total_applications=total_applications,
+
         pending_applications=pending_applications,
+
         accepted_applications=accepted_applications,
+
         completed_applications=completed_applications
     )
 
@@ -1572,10 +1815,16 @@ def update_application_status(
 ):
 
     if "user_id" not in session:
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     if session.get("role") != "ngo":
-        return redirect(url_for("login"))
+
+        return redirect(
+            url_for("login")
+        )
 
     allowed_statuses = [
         "Pending",
@@ -1585,6 +1834,7 @@ def update_application_status(
     ]
 
     if new_status not in allowed_statuses:
+
         return redirect(
             url_for("ngo_dashboard")
         )
@@ -1623,6 +1873,7 @@ def update_application_status(
                opportunities.opportunity_id
 
         WHERE applications.application_id = ?
+
         AND opportunities.ngo_id = ?
         """,
         (
@@ -1678,12 +1929,12 @@ def logout():
 
 
 # ============================================================
-# INITIALIZE DATABASE
+# APPLICATION STARTUP
 # ============================================================
 
 def initialize_application():
 
-    print("----------------------------------------")
+    print()
     print("SevaConnect starting...")
     print("----------------------------------------")
 
@@ -1700,17 +1951,22 @@ def initialize_application():
         )
 
     init_database()
+
     load_csv_data()
 
+    print("----------------------------------------")
+    print(
+        "SevaConnect is ready."
+    )
+
 
 # ============================================================
-# START
+# RUN APPLICATION
 # ============================================================
-
-initialize_application()
-
 
 if __name__ == "__main__":
+
+    initialize_application()
 
     app.run(
         debug=True,
