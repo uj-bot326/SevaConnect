@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import sqlite3
+import os
 import pandas as pd
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 from matching import rank_opportunities
 
@@ -13,20 +15,58 @@ app = Flask(__name__)
 
 app.secret_key = "sevaconnect-secret-key"
 
-DATABASE = "database.db"
-
 
 # ============================================================
 # DATABASE CONNECTION
 # ============================================================
 
+class DatabaseConnection:
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def execute(self, query, params=None):
+
+        # Convert SQLite-style ? placeholders
+        # to PostgreSQL-style %s placeholders.
+        query = query.replace("?", "%s")
+
+        cursor = self.connection.cursor()
+
+        if params is None:
+            cursor.execute(query)
+        else:
+            cursor.execute(query, params)
+
+        return cursor
+
+    def commit(self):
+        self.connection.commit()
+
+    def rollback(self):
+        self.connection.rollback()
+
+    def close(self):
+        self.connection.close()
+
+
 def get_db_connection():
 
-    connection = sqlite3.connect(DATABASE)
+    database_url = os.environ.get("DATABASE_URL")
 
-    connection.row_factory = sqlite3.Row
+    if not database_url:
 
-    return connection
+        raise RuntimeError(
+            "DATABASE_URL is not configured. "
+            "Add DATABASE_URL in Render Environment Variables."
+        )
+
+    connection = psycopg2.connect(
+        database_url,
+        cursor_factory=RealDictCursor
+    )
+
+    return DatabaseConnection(connection)
 
 
 # ============================================================
@@ -40,16 +80,21 @@ def add_column_if_missing(
     column_definition
 ):
 
-    columns = connection.execute(
-        f"PRAGMA table_info({table_name})"
-    ).fetchall()
+    result = connection.execute(
+        """
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+        AND table_name = ?
+        AND column_name = ?
+        """,
+        (
+            table_name,
+            column_name
+        )
+    ).fetchone()
 
-    existing_columns = [
-        column["name"]
-        for column in columns
-    ]
-
-    if column_name not in existing_columns:
+    if result is None:
 
         connection.execute(
             f"""
@@ -76,7 +121,7 @@ def init_database():
     connection.execute("""
         CREATE TABLE IF NOT EXISTS volunteers (
 
-            volunteer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            volunteer_id SERIAL PRIMARY KEY,
 
             name TEXT NOT NULL,
 
@@ -107,7 +152,7 @@ def init_database():
     connection.execute("""
         CREATE TABLE IF NOT EXISTS ngos (
 
-            ngo_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ngo_id SERIAL PRIMARY KEY,
 
             name TEXT NOT NULL,
 
@@ -117,13 +162,17 @@ def init_database():
 
             location TEXT,
 
-            description TEXT
+            description TEXT,
+
+            user_id INTEGER
 
         )
     """)
 
 
-    # Add user_id to existing NGO table if needed
+    # --------------------------------------------------------
+    # Make sure user_id exists for older database versions
+    # --------------------------------------------------------
 
     add_column_if_missing(
         connection,
@@ -140,7 +189,7 @@ def init_database():
     connection.execute("""
         CREATE TABLE IF NOT EXISTS opportunities (
 
-            opportunity_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            opportunity_id SERIAL PRIMARY KEY,
 
             ngo_id INTEGER,
 
@@ -176,7 +225,7 @@ def init_database():
     connection.execute("""
         CREATE TABLE IF NOT EXISTS feedback (
 
-            feedback_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            feedback_id SERIAL PRIMARY KEY,
 
             volunteer_id INTEGER,
 
@@ -206,7 +255,7 @@ def init_database():
     connection.execute("""
         CREATE TABLE IF NOT EXISTS users (
 
-            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id SERIAL PRIMARY KEY,
 
             name TEXT NOT NULL,
 
@@ -227,7 +276,7 @@ def init_database():
     connection.execute("""
         CREATE TABLE IF NOT EXISTS volunteer_profiles (
 
-            profile_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            profile_id SERIAL PRIMARY KEY,
 
             user_id INTEGER UNIQUE NOT NULL,
 
@@ -259,7 +308,7 @@ def init_database():
     connection.execute("""
         CREATE TABLE IF NOT EXISTS applications (
 
-            application_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            application_id SERIAL PRIMARY KEY,
 
             user_id INTEGER NOT NULL,
 
@@ -331,7 +380,6 @@ def load_csv_data():
             f"{row['ngo_id']}@synthetic.sevaconnect"
         )
 
-
         existing = connection.execute(
             """
             SELECT ngo_id
@@ -375,7 +423,6 @@ def load_csv_data():
         email = (
             f"{row['volunteer_id']}@synthetic.sevaconnect"
         )
-
 
         existing = connection.execute(
             """
@@ -436,7 +483,6 @@ def load_csv_data():
 
 
         if ngo is None:
-
             continue
 
 
@@ -511,7 +557,6 @@ def safe_value(
 ):
 
     if row is None:
-
         return default
 
 
@@ -524,11 +569,9 @@ def safe_value(
                 value = row[name]
 
                 if value is not None:
-
                     return value
 
         except Exception:
-
             pass
 
 
@@ -595,7 +638,9 @@ def register():
             connection.commit()
 
 
-        except sqlite3.IntegrityError:
+        except psycopg2.IntegrityError:
+
+            connection.rollback()
 
             connection.close()
 
@@ -748,9 +793,7 @@ def volunteer_profile():
         connection.execute(
             """
             UPDATE users
-
             SET name = ?
-
             WHERE user_id = ?
             """,
             (
@@ -777,7 +820,6 @@ def volunteer_profile():
             connection.execute(
                 """
                 UPDATE volunteer_profiles
-
                 SET
                     skills = ?,
                     interests = ?,
@@ -786,7 +828,6 @@ def volunteer_profile():
                     experience = ?,
                     preferred_mode = ?,
                     hours_per_week = ?
-
                 WHERE user_id = ?
                 """,
                 (
@@ -881,25 +922,20 @@ def normalize_recommendations(
 
 
     if not raw_recommendations:
-
         return normalized
 
 
     for item in raw_recommendations:
 
         if not isinstance(item, dict):
-
             continue
 
 
         if "opportunity" in item:
 
-            base = item.get(
-                "opportunity"
-            )
+            base = item.get("opportunity")
 
             if not isinstance(base, dict):
-
                 continue
 
             opportunity = dict(base)
@@ -1172,9 +1208,7 @@ def volunteer_dashboard():
     applied_rows = connection.execute(
         """
         SELECT opportunity_id
-
         FROM applications
-
         WHERE user_id = ?
         """,
         (
@@ -1192,11 +1226,8 @@ def volunteer_dashboard():
     completed_row = connection.execute(
         """
         SELECT COUNT(*) AS total
-
         FROM applications
-
         WHERE user_id = ?
-
         AND status = 'Completed'
         """,
         (
@@ -1505,9 +1536,7 @@ def apply_opportunity(
     opportunity = connection.execute(
         """
         SELECT opportunity_id
-
         FROM opportunities
-
         WHERE opportunity_id = ?
         """,
         (
@@ -1534,11 +1563,8 @@ def apply_opportunity(
     existing_application = connection.execute(
         """
         SELECT application_id
-
         FROM applications
-
         WHERE user_id = ?
-
         AND opportunity_id = ?
         """,
         (
@@ -1569,7 +1595,6 @@ def apply_opportunity(
                 opportunity_id,
                 status
             )
-
             VALUES (?, ?, 'Pending')
             """,
             (
@@ -1581,7 +1606,7 @@ def apply_opportunity(
         connection.commit()
 
 
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
 
         connection.rollback()
 
@@ -1608,11 +1633,8 @@ def get_ngo_for_user():
     ngo = connection.execute(
         """
         SELECT *
-
         FROM ngos
-
         WHERE user_id = ?
-
         LIMIT 1
         """,
         (
@@ -1626,9 +1648,7 @@ def get_ngo_for_user():
         user = connection.execute(
             """
             SELECT *
-
             FROM users
-
             WHERE user_id = ?
             """,
             (
@@ -1644,11 +1664,8 @@ def get_ngo_for_user():
             ngo = connection.execute(
                 """
                 SELECT *
-
                 FROM ngos
-
                 WHERE email = ?
-
                 LIMIT 1
                 """,
                 (
@@ -1662,9 +1679,7 @@ def get_ngo_for_user():
                 connection.execute(
                     """
                     UPDATE ngos
-
                     SET user_id = ?
-
                     WHERE ngo_id = ?
                     """,
                     (
@@ -1678,9 +1693,7 @@ def get_ngo_for_user():
                 ngo = connection.execute(
                     """
                     SELECT *
-
                     FROM ngos
-
                     WHERE ngo_id = ?
                     """,
                     (
@@ -1704,7 +1717,6 @@ def get_ngo_for_user():
                         location,
                         description
                     )
-
                     VALUES (?, ?, ?, '', '', '')
                     """,
                     (
@@ -1720,11 +1732,8 @@ def get_ngo_for_user():
                 ngo = connection.execute(
                     """
                     SELECT *
-
                     FROM ngos
-
                     WHERE user_id = ?
-
                     LIMIT 1
                     """,
                     (
@@ -1782,49 +1791,61 @@ def ngo_profile():
         connection = get_db_connection()
 
 
-        connection.execute(
-            """
-            UPDATE ngos
+        try:
 
-            SET
-                name = ?,
-                email = ?,
-                cause = ?,
-                location = ?,
-                description = ?
-
-            WHERE ngo_id = ?
-            """,
-            (
-                name,
-                email,
-                cause,
-                location,
-                description,
-                ngo["ngo_id"]
+            connection.execute(
+                """
+                UPDATE ngos
+                SET
+                    name = ?,
+                    email = ?,
+                    cause = ?,
+                    location = ?,
+                    description = ?
+                WHERE ngo_id = ?
+                """,
+                (
+                    name,
+                    email,
+                    cause,
+                    location,
+                    description,
+                    ngo["ngo_id"]
+                )
             )
-        )
 
 
-        connection.execute(
-            """
-            UPDATE users
-
-            SET
-                name = ?,
-                email = ?
-
-            WHERE user_id = ?
-            """,
-            (
-                name,
-                email,
-                session["user_id"]
+            connection.execute(
+                """
+                UPDATE users
+                SET
+                    name = ?,
+                    email = ?
+                WHERE user_id = ?
+                """,
+                (
+                    name,
+                    email,
+                    session["user_id"]
+                )
             )
-        )
 
 
-        connection.commit()
+            connection.commit()
+
+        except psycopg2.IntegrityError:
+
+            connection.rollback()
+
+            connection.close()
+
+            return """
+                <h2>Email already registered.</h2>
+                <a href="/ngo-profile">
+                    Go back
+                </a>
+            """
+
 
         connection.close()
 
@@ -1913,7 +1934,6 @@ def create_opportunity():
                 mode,
                 experience_required
             )
-
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
@@ -1986,19 +2006,12 @@ def delete_opportunity(
     connection.execute(
         """
         DELETE FROM applications
-
         WHERE opportunity_id = ?
-
         AND opportunity_id IN (
-
             SELECT opportunity_id
-
             FROM opportunities
-
             WHERE opportunity_id = ?
-
             AND ngo_id = ?
-
         )
         """,
         (
@@ -2014,9 +2027,7 @@ def delete_opportunity(
     connection.execute(
         """
         DELETE FROM opportunities
-
         WHERE opportunity_id = ?
-
         AND ngo_id = ?
         """,
         (
@@ -2074,11 +2085,8 @@ def ngo_dashboard():
     opportunities = connection.execute(
         """
         SELECT *
-
         FROM opportunities
-
         WHERE ngo_id = ?
-
         ORDER BY opportunity_id DESC
         """,
         (
@@ -2094,14 +2102,10 @@ def ngo_dashboard():
     total_applications = connection.execute(
         """
         SELECT COUNT(*) AS total
-
         FROM applications
-
         JOIN opportunities
-
             ON applications.opportunity_id =
                opportunities.opportunity_id
-
         WHERE opportunities.ngo_id = ?
         """,
         (
@@ -2117,16 +2121,11 @@ def ngo_dashboard():
     pending_applications = connection.execute(
         """
         SELECT COUNT(*) AS total
-
         FROM applications
-
         JOIN opportunities
-
             ON applications.opportunity_id =
                opportunities.opportunity_id
-
         WHERE opportunities.ngo_id = ?
-
         AND applications.status = 'Pending'
         """,
         (
@@ -2142,16 +2141,11 @@ def ngo_dashboard():
     accepted_applications = connection.execute(
         """
         SELECT COUNT(*) AS total
-
         FROM applications
-
         JOIN opportunities
-
             ON applications.opportunity_id =
                opportunities.opportunity_id
-
         WHERE opportunities.ngo_id = ?
-
         AND applications.status = 'Accepted'
         """,
         (
@@ -2203,17 +2197,14 @@ def ngo_dashboard():
         FROM applications
 
         JOIN users
-
             ON applications.user_id =
                users.user_id
 
         LEFT JOIN volunteer_profiles
-
             ON users.user_id =
                volunteer_profiles.user_id
 
         JOIN opportunities
-
             ON applications.opportunity_id =
                opportunities.opportunity_id
 
@@ -2302,13 +2293,11 @@ def update_application_status(
     application = connection.execute(
         """
         SELECT
-
             applications.application_id
 
         FROM applications
 
         JOIN opportunities
-
             ON applications.opportunity_id =
                opportunities.opportunity_id
 
@@ -2328,9 +2317,7 @@ def update_application_status(
         connection.execute(
             """
             UPDATE applications
-
             SET status = ?
-
             WHERE application_id = ?
             """,
             (
@@ -2369,14 +2356,33 @@ def logout():
 
 
 # ============================================================
-# START APPLICATION
+# INITIALIZE DATABASE
 # ============================================================
 
-if __name__ == "__main__":
+# IMPORTANT:
+# This runs when Gunicorn imports app.py.
+# Previously this was inside if __name__ == "__main__",
+# which meant it did not run when Render started Gunicorn.
+
+try:
 
     init_database()
 
     load_csv_data()
+
+except Exception as error:
+
+    print(
+        "Database initialization error:",
+        error
+    )
+
+
+# ============================================================
+# LOCAL DEVELOPMENT
+# ============================================================
+
+if __name__ == "__main__":
 
     app.run(
         debug=True,
