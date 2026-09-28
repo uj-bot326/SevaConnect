@@ -361,6 +361,37 @@ def init_database():
         """
     )
 
+    # --------------------------------------------------------
+    # NGO INVITATIONS / TWO-WAY MATCHING
+    # --------------------------------------------------------
+
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ngo_invitations (
+            invitation_id SERIAL PRIMARY KEY,
+            ngo_id INTEGER NOT NULL,
+            volunteer_user_id INTEGER NOT NULL,
+            opportunity_id INTEGER NOT NULL,
+            message TEXT,
+            status TEXT DEFAULT 'Pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+        if connection.is_postgres
+        else
+        """
+        CREATE TABLE IF NOT EXISTS ngo_invitations (
+            invitation_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ngo_id INTEGER NOT NULL,
+            volunteer_user_id INTEGER NOT NULL,
+            opportunity_id INTEGER NOT NULL,
+            message TEXT,
+            status TEXT DEFAULT 'Pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+
     connection.commit()
     connection.close()
 
@@ -1650,6 +1681,268 @@ def delete_opportunity(
 
 
 # ============================================================
+# NGO: FIND AND APPROACH VOLUNTEERS
+# ============================================================
+
+@app.route("/ngo/find-volunteers")
+def find_volunteers():
+
+    if "user_id" not in session or session.get("role") != "ngo":
+        return redirect(url_for("login"))
+
+    connection = get_db_connection()
+    ngo = get_ngo_for_user(connection, session["user_id"])
+
+    if ngo is None:
+        connection.close()
+        return redirect(url_for("ngo_profile"))
+
+    volunteers = connection.execute(
+        """
+        SELECT
+            users.user_id,
+            users.name,
+            users.email,
+            volunteer_profiles.skills,
+            volunteer_profiles.interests,
+            volunteer_profiles.location,
+            volunteer_profiles.availability,
+            volunteer_profiles.experience,
+            volunteer_profiles.preferred_mode,
+            volunteer_profiles.hours_per_week
+        FROM users
+        INNER JOIN volunteer_profiles
+            ON users.user_id = volunteer_profiles.user_id
+        WHERE users.role = 'volunteer'
+        ORDER BY users.name ASC
+        """
+    ).fetchall()
+
+    opportunities = connection.execute(
+        """
+        SELECT *
+        FROM opportunities
+        WHERE ngo_id = ?
+        ORDER BY opportunity_id DESC
+        """,
+        (ngo["ngo_id"],)
+    ).fetchall()
+
+    connection.close()
+
+    return render_template(
+        "find_volunteers.html",
+        ngo=ngo,
+        volunteers=volunteers,
+        opportunities=opportunities
+    )
+
+
+@app.route("/ngo/approach-volunteer/<int:volunteer_user_id>", methods=["POST"])
+def approach_volunteer(volunteer_user_id):
+
+    if "user_id" not in session or session.get("role") != "ngo":
+        return redirect(url_for("login"))
+
+    connection = get_db_connection()
+    ngo = get_ngo_for_user(connection, session["user_id"])
+
+    if ngo is None:
+        connection.close()
+        return redirect(url_for("ngo_profile"))
+
+    opportunity_id = request.form.get("opportunity_id", "").strip()
+    message = request.form.get("message", "").strip()
+
+    try:
+        opportunity_id = int(opportunity_id)
+    except (TypeError, ValueError):
+        connection.close()
+        flash("Please select an opportunity.", "error")
+        return redirect(url_for("find_volunteers"))
+
+    volunteer = connection.execute(
+        """
+        SELECT user_id
+        FROM users
+        WHERE user_id = ? AND role = 'volunteer'
+        """,
+        (volunteer_user_id,)
+    ).fetchone()
+
+    opportunity = connection.execute(
+        """
+        SELECT opportunity_id
+        FROM opportunities
+        WHERE opportunity_id = ? AND ngo_id = ?
+        """,
+        (opportunity_id, ngo["ngo_id"])
+    ).fetchone()
+
+    if not volunteer or not opportunity:
+        connection.close()
+        flash("Invalid volunteer or opportunity.", "error")
+        return redirect(url_for("find_volunteers"))
+
+    existing = connection.execute(
+        """
+        SELECT invitation_id, status
+        FROM ngo_invitations
+        WHERE ngo_id = ?
+          AND volunteer_user_id = ?
+          AND opportunity_id = ?
+        """,
+        (ngo["ngo_id"], volunteer_user_id, opportunity_id)
+    ).fetchone()
+
+    if existing:
+        connection.close()
+        flash("You have already approached this volunteer for this opportunity.", "info")
+        return redirect(url_for("find_volunteers"))
+
+    connection.execute(
+        """
+        INSERT INTO ngo_invitations
+        (ngo_id, volunteer_user_id, opportunity_id, message, status)
+        VALUES (?, ?, ?, ?, 'Pending')
+        """,
+        (ngo["ngo_id"], volunteer_user_id, opportunity_id, message)
+    )
+
+    connection.commit()
+    connection.close()
+
+    flash("Volunteer approached successfully.", "success")
+    return redirect(url_for("find_volunteers"))
+
+
+# ============================================================
+# VOLUNTEER: VIEW AND RESPOND TO NGO INVITATIONS
+# ============================================================
+
+@app.route("/volunteer/invitations")
+def volunteer_invitations():
+
+    if "user_id" not in session or session.get("role") != "volunteer":
+        return redirect(url_for("login"))
+
+    connection = get_db_connection()
+
+    invitations = connection.execute(
+        """
+        SELECT
+            ngo_invitations.invitation_id,
+            ngo_invitations.message,
+            ngo_invitations.status,
+            ngo_invitations.created_at,
+            ngos.ngo_id,
+            ngos.name AS ngo_name,
+            ngos.cause AS ngo_cause,
+            ngos.location AS ngo_location,
+            opportunities.opportunity_id,
+            opportunities.title AS opportunity_title,
+            opportunities.cause,
+            opportunities.required_skills,
+            opportunities.location,
+            opportunities.availability,
+            opportunities.hours_required,
+            opportunities.mode,
+            opportunities.experience_required
+        FROM ngo_invitations
+        INNER JOIN ngos
+            ON ngo_invitations.ngo_id = ngos.ngo_id
+        INNER JOIN opportunities
+            ON ngo_invitations.opportunity_id = opportunities.opportunity_id
+        WHERE ngo_invitations.volunteer_user_id = ?
+        ORDER BY ngo_invitations.created_at DESC
+        """,
+        (session["user_id"],)
+    ).fetchall()
+
+    connection.close()
+
+    return render_template(
+        "volunteer_invitations.html",
+        invitations=invitations
+    )
+
+
+@app.route("/volunteer/invitation/<int:invitation_id>/<string:new_status>", methods=["POST"])
+def update_invitation_status(invitation_id, new_status):
+
+    if "user_id" not in session or session.get("role") != "volunteer":
+        return redirect(url_for("login"))
+
+    if new_status not in ["Accepted", "Rejected"]:
+        return redirect(url_for("volunteer_invitations"))
+
+    connection = get_db_connection()
+
+    invitation = connection.execute(
+        """
+        SELECT invitation_id, opportunity_id, status
+        FROM ngo_invitations
+        WHERE invitation_id = ?
+          AND volunteer_user_id = ?
+        """,
+        (invitation_id, session["user_id"])
+    ).fetchone()
+
+    if invitation is None:
+        connection.close()
+        return redirect(url_for("volunteer_invitations"))
+
+    connection.execute(
+        """
+        UPDATE ngo_invitations
+        SET status = ?
+        WHERE invitation_id = ?
+          AND volunteer_user_id = ?
+        """,
+        (new_status, invitation_id, session["user_id"])
+    )
+
+    if new_status == "Accepted":
+        existing_application = connection.execute(
+            """
+            SELECT application_id
+            FROM applications
+            WHERE user_id = ? AND opportunity_id = ?
+            """,
+            (session["user_id"], invitation["opportunity_id"])
+        ).fetchone()
+
+        if existing_application:
+            connection.execute(
+                """
+                UPDATE applications
+                SET status = 'Accepted'
+                WHERE application_id = ?
+                """,
+                (existing_application["application_id"],)
+            )
+        else:
+            connection.execute(
+                """
+                INSERT INTO applications
+                (user_id, opportunity_id, status)
+                VALUES (?, ?, 'Accepted')
+                """,
+                (session["user_id"], invitation["opportunity_id"])
+            )
+
+    connection.commit()
+    connection.close()
+
+    flash(
+        "Invitation accepted." if new_status == "Accepted" else "Invitation rejected.",
+        "success"
+    )
+
+    return redirect(url_for("volunteer_invitations"))
+
+
+# ============================================================
 # NGO DASHBOARD
 # ============================================================
 
@@ -1964,9 +2257,11 @@ def initialize_application():
 # RUN APPLICATION
 # ============================================================
 
-# Initialize the database when the app is imported by Gunicorn/Render
-# and also when running app.py directly.
-initialize_application()
+# Initialize database for both local Python execution and Gunicorn/Render.
+try:
+    initialize_application()
+except Exception as startup_error:
+    print("Startup database initialization error:", startup_error)
 
 if __name__ == "__main__":
 

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Find Volunteers | SevaConnect</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        .volunteer-search-page {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #666;
+        }
+
+        .volunteer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .volunteer-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
+        }
+
+        .volunteer-card h3 {
+            margin-bottom: 5px;
+        }
+
+        .volunteer-email {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .volunteer-info {
+            margin-bottom: 18px;
+        }
+
+        .volunteer-info p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .volunteer-info strong {
+            color: #1f2937;
+        }
+
+        .approach-form {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .approach-form label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        .approach-form select,
+        .approach-form textarea {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .approach-form textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .approach-btn {
+            width: 100%;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            background: #198754;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .approach-btn:hover {
+            background: #157347;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            background: white;
+            border-radius: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="volunteer-search-page">
+
+        <div class="page-header">
+            <h1>Find Volunteers</h1>
+            <p>
+                Discover volunteers whose skills and interests match your opportunities.
+            </p>
+        </div>
+
+        {% if volunteers %}
+
+        <div class="volunteer-grid">
+
+            {% for volunteer in volunteers %}
+
+            <div class="volunteer-card">
+
+                <h3>{{ volunteer.name }}</h3>
+
+                <div class="volunteer-email">
+                    {{ volunteer.email }}
+                </div>
+
+                <div class="volunteer-info">
+
+                    <p>
+                        <strong>Skills:</strong>
+                        {{ volunteer.skills or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Interests:</strong>
+                        {{ volunteer.interests or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Location:</strong>
+                        {{ volunteer.location or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Availability:</strong>
+                        {{ volunteer.availability or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Experience:</strong>
+                        {{ volunteer.experience or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Preferred Mode:</strong>
+                        {{ volunteer.preferred_mode or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Hours / Week:</strong>
+                        {{ volunteer.hours_per_week or 0 }}
+                    </p>
+
+                </div>
+
+                <div class="approach-form">
+
+                    <form
+                        action="{{ url_for('approach_volunteer', volunteer_user_id=volunteer.user_id) }}"
+                        method="POST"
+                    >
+
+                        <label for="opportunity_{{ volunteer.user_id }}">
+                            Select Opportunity
+                        </label>
+
+                        <select
+                            id="opportunity_{{ volunteer.user_id }}"
+                            name="opportunity_id"
+                            required
+                        >
+
+                            <option value="">
+                                Select an opportunity
+                            </option>
+
+                            {% for opportunity in opportunities %}
+
+                            <option value="{{ opportunity.opportunity_id }}">
+                                {{ opportunity.title }}
+                            </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                        <label for="message_{{ volunteer.user_id }}">
+                            Message
+                        </label>
+
+                        <textarea
+                            id="message_{{ volunteer.user_id }}"
+                            name="message"
+                            placeholder="Write a message to this volunteer..."
+                        ></textarea>
+
+                        <button
+                            type="submit"
+                            class="approach-btn"
+                        >
+                            Approach Volunteer
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <h2>No volunteers found</h2>
+
+            <p>
+                There are currently no volunteer profiles available.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</body>
+</html>

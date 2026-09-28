@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NGO Invitations | SevaConnect</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+
+        .invitations-page {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: #666;
+        }
+
+        .invitation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .invitation-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            border: 1px solid #eee;
+        }
+
+        .invitation-card h2 {
+            margin-bottom: 5px;
+        }
+
+        .ngo-name {
+            color: #198754;
+            font-weight: 600;
+            margin-bottom: 18px;
+        }
+
+        .invitation-info {
+            margin-bottom: 20px;
+        }
+
+        .invitation-info p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .message-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 18px 0;
+        }
+
+        .message-box strong {
+            display: block;
+            margin-bottom: 7px;
+        }
+
+        .invitation-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .invitation-actions form {
+            flex: 1;
+        }
+
+        .accept-btn,
+        .reject-btn {
+            width: 100%;
+            padding: 11px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .accept-btn {
+            background: #198754;
+        }
+
+        .accept-btn:hover {
+            background: #157347;
+        }
+
+        .reject-btn {
+            background: #dc3545;
+        }
+
+        .reject-btn:hover {
+            background: #bb2d3b;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-accepted {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 16px;
+        }
+
+        @media (max-width: 600px) {
+
+            .invitation-actions {
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="invitations-page">
+
+        <div class="page-header">
+
+            <h1>NGO Invitations</h1>
+
+            <p>
+                NGOs can approach you when they think your skills match
+                their volunteering opportunities.
+            </p>
+
+        </div>
+
+
+        {% if invitations %}
+
+        <div class="invitation-list">
+
+            {% for invitation in invitations %}
+
+            <div class="invitation-card">
+
+                <h2>
+                    {{ invitation.opportunity_title }}
+                </h2>
+
+                <div class="ngo-name">
+                    {{ invitation.ngo_name }}
+                </div>
+
+
+                <div class="invitation-info">
+
+                    <p>
+                        <strong>Cause:</strong>
+                        {{ invitation.cause or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Location:</strong>
+                        {{ invitation.location or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Availability:</strong>
+                        {{ invitation.availability or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Mode:</strong>
+                        {{ invitation.mode or "Not specified" }}
+                    </p>
+
+                    <p>
+                        <strong>Experience Required:</strong>
+                        {{ invitation.experience_required or "Not specified" }}
+                    </p>
+
+                </div>
+
+
+                {% if invitation.message %}
+
+                <div class="message-box">
+
+                    <strong>Message from NGO</strong>
+
+                    <p>
+                        {{ invitation.message }}
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+
+                {% if invitation.status == "Pending" %}
+
+                <div class="invitation-actions">
+
+                    <form
+                        action="{{ url_for(
+                            'respond_to_invitation',
+                            invitation_id=invitation.invitation_id,
+                            response='Accepted'
+                        ) }}"
+                        method="POST"
+                    >
+
+                        <button
+                            type="submit"
+                            class="accept-btn"
+                        >
+                            Accept Invitation
+                        </button>
+
+                    </form>
+
+
+                    <form
+                        action="{{ url_for(
+                            'respond_to_invitation',
+                            invitation_id=invitation.invitation_id,
+                            response='Rejected'
+                        ) }}"
+                        method="POST"
+                    >
+
+                        <button
+                            type="submit"
+                            class="reject-btn"
+                        >
+                            Reject Invitation
+                        </button>
+
+                    </form>
+
+                </div>
+
+                {% elif invitation.status == "Accepted" %}
+
+                <span class="status-badge status-accepted">
+                    Accepted
+                </span>
+
+                {% elif invitation.status == "Rejected" %}
+
+                <span class="status-badge status-rejected">
+                    Rejected
+                </span>
+
+                {% else %}
+
+                <span class="status-badge status-pending">
+                    {{ invitation.status }}
+                </span>
+
+                {% endif %}
+
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+
+            <h2>No NGO invitations yet</h2>
+
+            <p>
+                When an NGO finds your profile suitable for one of
+                its opportunities, its invitation will appear here.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</body>
+</html>
