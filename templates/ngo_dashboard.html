@@ -230,7 +230,6 @@
             padding: 25px;
             margin-bottom: 30px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -239,6 +238,22 @@
 
         .profile-completion {
             color: #666;
+        }
+
+        /* FIND VOLUNTEERS NAVIGATION */
+        .find-volunteers-link {
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .nav-links {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 800px) {
@@ -259,6 +274,19 @@
 
             .applicant-header {
                 flex-direction: column;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .nav-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                justify-content: center;
+                width: 100%;
             }
         }
 
@@ -304,6 +332,14 @@
 
             <a href="{{ url_for('create_opportunity') }}">
                 Create Opportunity
+            </a>
+
+            <!-- NEW: NGO CAN FIND AND APPROACH VOLUNTEERS -->
+            <a
+                href="{{ url_for('find_volunteers') }}"
+                class="find-volunteers-link"
+            >
+                Find Volunteers
             </a>
 
             <a href="{{ url_for('logout') }}">
@@ -594,6 +630,7 @@
                     <div class="opportunity-tag">
 
                         Applied for:
+
                         <strong>
                             {{ applicant["opportunity_title"] }}
                         </strong>
