@@ -38,7 +38,7 @@ app.secret_key = os.environ.get(
 #
 # Local:
 # DATABASE_URL can be absent and SQLite will be used.
-DATABASE_URL = os.environ.get("postgresql://sevaconnect_db_user:B6ajchXzF0k6oeWd2riHesfa9rxBtkJI@dpg-dasenenpn0mc7383b6ng-a/sevaconnect_db")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 SQLITE_DATABASE = "database.db"
 
@@ -1964,9 +1964,11 @@ def initialize_application():
 # RUN APPLICATION
 # ============================================================
 
-if __name__ == "__main__":
+# Initialize the database when the app is imported by Gunicorn/Render
+# and also when running app.py directly.
+initialize_application()
 
-    initialize_application()
+if __name__ == "__main__":
 
     app.run(
         debug=True,
