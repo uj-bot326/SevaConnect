@@ -1135,6 +1135,45 @@ def volunteer_dashboard():
                 opportunities
             )
 
+            # Ensure every recommendation keeps the database opportunity_id.
+            # The matching engine may return a reduced dictionary containing
+            # only matching fields, while the dashboard needs the real ID for
+            # the /apply/<opportunity_id> route.
+            fixed_recommendations = []
+
+            for recommendation in recommendations or []:
+
+                if hasattr(recommendation, "keys"):
+                    recommendation = dict(recommendation)
+                else:
+                    recommendation = dict(recommendation)
+
+                if recommendation.get("opportunity_id") is None:
+
+                    recommendation_title = str(
+                        recommendation.get(
+                            "opportunity_title",
+                            recommendation.get("title", "")
+                        )
+                    ).strip().lower()
+
+                    for original_opportunity in opportunities:
+
+                        original_title = str(
+                            original_opportunity["title"]
+                        ).strip().lower()
+
+                        if original_title == recommendation_title:
+                            recommendation["opportunity_id"] = (
+                                original_opportunity["opportunity_id"]
+                            )
+                            break
+
+                if recommendation.get("opportunity_id") is not None:
+                    fixed_recommendations.append(recommendation)
+
+            recommendations = fixed_recommendations
+
         except Exception as error:
 
             print(
